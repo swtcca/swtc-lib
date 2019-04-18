@@ -3,27 +3,8 @@
  */
 var util = require("util")
 var Event = require("events").EventEmitter
-var utils = require("./utils")
-const currency = require("./config").currency
-
-function parseKey(key) {
-  var parts = key.split(":")
-  if (parts.length !== 2) return null
-
-  function parsePart(part) {
-    if (part === currency) return { currency: currency, issuer: "" }
-    var _parts = part.split("/")
-    if (_parts.length !== 2) return null
-    if (!utils.isValidCurrency(_parts[0])) return null
-    if (!utils.isValidAddress(_parts[1])) return null
-    return { currency: _parts[0], issuer: _parts[1] }
-  }
-
-  var gets = parsePart(parts[0])
-  var pays = parsePart(parts[1])
-  if (!gets || !pays) return null
-  return { gets: gets, pays: pays }
-}
+var utils = require("swtc-utils")
+const currency = utils.getCurrency()
 
 /**
  * order book stub for all order book
@@ -44,7 +25,7 @@ function OrderBook(remote) {
 
   self.on("newListener", function(key, listener) {
     if (key === "removeListener") return
-    var pair = parseKey(key)
+    var pair = utils.parseKey(key)
     if (!pair) {
       self.pair = new Error("invalid key")
       return self
@@ -52,7 +33,7 @@ function OrderBook(remote) {
     self._books[key] = listener
   })
   self.on("removeListener", function(key) {
-    var pair = parseKey(key)
+    var pair = utils.parseKey(key)
     if (!pair) {
       self.pair = new Error("invalid key")
       return self

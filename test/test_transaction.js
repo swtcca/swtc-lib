@@ -2,9 +2,9 @@ const chai = require("chai")
 const expect = chai.expect
 const Transaction = require("../src/transaction")
 const Event = require("events").EventEmitter
-const Remote = require("../src/remote")
+const Remote = require("./remote").Remote
 const config = require("./config")
-const Request = require("../src/request")
+const Request = require("./request")
 const sinon = require("sinon")
 let { JT_NODE, testSecret, testAddress, testDestinationAddress } = config
 
@@ -29,7 +29,7 @@ describe("test Transaction", function() {
       expect(inst._filter("a")).to.equal("a")
     })
 
-    xit("constructor: _token is bwt", function() {
+    it("constructor: _token is bwt", function() {
       let remote = new Remote({
         server: JT_NODE,
         local_sign: true,

@@ -2,13 +2,53 @@
  * Created by Administrator on 2016/11/20.
  */
 var extend = require("extend")
-var baselib = require("swtc-wallet").Wallet
+var baselib = require("swtc-factory").Wallet
 var _extend = require("lodash/extend")
 var _ = require("lodash")
 var utf8 = require("utf8")
-var config = require("./config")
-const currency = config.currency
+const SWTCCHAINS = require("swtc-chains")
 var bignumber = require("bignumber.js")
+
+// from jcc
+var getChains = function(chain_or_token = "SWT") {
+  return SWTCCHAINS.filter(
+    chain =>
+      chain.code.toLowerCase === chain_or_token.toLowerCase() ||
+      chain.currency.toLowerCase() === chain_or_token.toLowerCase()
+  )
+}
+
+var getCurrency = function(token = "SWT") {
+  let chains = getChains(token)
+  if (chains.length > 0) {
+    return chains[0].currency.toUpperCase()
+  }
+  return "SWT"
+}
+
+var getFee = function(token = "SWT") {
+  let chains = getChains(token)
+  if (chains.length > 0) {
+    return chains[0].fee || 10000
+  }
+  return 10000
+}
+
+var getAccountZero = function(token = "SWT") {
+  let chains = getChains(token)
+  if (chains.length > 0) {
+    return chains[0].ACCOUNT_ZERO || "jjjjjjjjjjjjjjjjjjjjjhoLvTp"
+  }
+  return "jjjjjjjjjjjjjjjjjjjjjhoLvTp"
+}
+
+var getAccountOne = function(token = "SWT") {
+  let chains = getChains(token)
+  if (chains.length > 0) {
+    return chains[0].ACCOUNT_ONE || "jjjjjjjjjjjjjjjjjjjjBZbvri"
+  }
+  return "jjjjjjjjjjjjjjjjjjjjBZbvri"
+}
 
 // Flags for ledger entries
 var LEDGER_FLAGS = {
@@ -77,8 +117,8 @@ function stringToHex(s) {
  * @param amount
  * @returns {boolean}
  */
-function isValidAmount(amount) {
-  var baselib = require("swtc-wallet").Wallet
+function isValidAmount(amount, token = "SWT") {
+  // var baselib = require("swtc-factory").Wallet
   if (amount === null || typeof amount !== "object") {
     return false
   }
@@ -93,6 +133,7 @@ function isValidAmount(amount) {
   if (!amount.currency || !isValidCurrency(amount.currency)) {
     return false
   }
+  let currency = getCurrency(token)
   // native currency issuer is empty
   if (amount.currency === currency && amount.issuer !== "") {
     return false
@@ -109,7 +150,7 @@ function isValidAmount(amount) {
  * @param amount
  * @returns {boolean}
  */
-function isValidAmount0(amount) {
+function isValidAmount0(amount, token = "SWT") {
   if (amount === null || typeof amount !== "object") {
     return false
   }
@@ -117,6 +158,7 @@ function isValidAmount0(amount) {
   if (!amount.currency || !isValidCurrency(amount.currency)) {
     return false
   }
+  let currency = getCurrency(token)
   // native currency issuer is empty
   if (amount.currency === currency && amount.issuer !== "") {
     return false
@@ -134,9 +176,10 @@ function isValidAmount0(amount) {
  * @param amount
  * @returns {*}
  */
-function parseAmount(amount) {
+function parseAmount(amount, token = "SWT") {
   if (typeof amount === "string" && !Number.isNaN(Number(amount))) {
     var value = String(new bignumber(amount).dividedBy(1000000.0))
+    let currency = getCurrency(token)
     return { value: value, currency: currency, issuer: "" }
   } else if (typeof amount === "object" && isValidAmount(amount)) {
     return amount
@@ -251,11 +294,12 @@ function affectedAccounts(tx) {
  * @param tx
  * @returns {Array}
  */
-function affectedBooks(tx) {
+function affectedBooks(tx, token = "SWT") {
   var data = tx.meta
   if (typeof data !== "object") return []
   if (!Array.isArray(data.AffectedNodes)) return []
 
+  let currency = getCurrency(token)
   var books = {}
   for (var i = 0; i < data.AffectedNodes.length; ++i) {
     var node = getTypeNode(data.AffectedNodes[i])
@@ -690,20 +734,7 @@ function arraySet(count, value) {
   return a
 }
 
-var ACCOUNT_ZERO = config.ACCOUNT_ZERO
-var ACCOUNT_ONE = config.ACCOUNT_ONE
-
-// from jcc
-var getCurrency = function(token) {
-  let configs = require("./configs")
-  var config = configs.find(function(conf) {
-    return conf.currency.toLowerCase() === token.toLowerCase()
-  })
-  var currency = config ? config.currency : "SWT"
-  return currency
-}
-
-var parseKey = function(key, token) {
+var parseKey = function(key, token = "SWT") {
   var parts = key.split(":")
   if (parts.length !== 2) return null
   var currency = getCurrency(token)
@@ -748,13 +779,14 @@ module.exports = {
   affectedBooks: affectedBooks,
   processTx: processTx,
   LEDGER_STATES: LEDGER_STATES,
-  ACCOUNT_ZERO: ACCOUNT_ZERO,
-  ACCOUNT_ONE: ACCOUNT_ONE,
+  ACCOUNT_ZERO: getAccountZero(),
+  ACCOUNT_ONE: getAccountOne(),
   arraySet: arraySet,
-  // from jcc
+  // for jcc
+  getChains: getChains,
   getCurrency: getCurrency,
-  getFee: () => 10000,
-  getAccountZero: () => ACCOUNT_ZERO,
-  getAccountOne: () => ACCOUNT_ONE,
+  getFee: getFee,
+  getAccountZero: getAccountZero,
+  getAccountOne: getAccountOne,
   parseKey: parseKey
 }

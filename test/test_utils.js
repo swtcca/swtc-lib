@@ -247,7 +247,7 @@ describe("test utils", function() {
       expect(currency).to.equal("SWT")
     })
 
-    xit("return BWT if the token is bwt", function() {
+    it("return BWT if the token is bwt", function() {
       let currency = utils.getCurrency("bwt")
       expect(currency).to.equal("BWT")
     })
@@ -259,7 +259,7 @@ describe("test utils", function() {
       expect(fee).to.equal(10000)
     })
 
-    xit("return 10 if the token is bwt", function() {
+    it("return 10 if the token is bwt", function() {
       let fee = utils.getFee("bwt")
       expect(fee).to.equal(10)
     })
@@ -276,7 +276,7 @@ describe("test utils", function() {
       expect(fee).to.equal("jjjjjjjjjjjjjjjjjjjjjhoLvTp")
     })
 
-    xit("return bbbbbbbbbbbbbbbbbbbbbhoLvTp if the token is bwt", function() {
+    it("return bbbbbbbbbbbbbbbbbbbbbhoLvTp if the token is bwt", function() {
       let fee = utils.getAccountZero("bwt")
       expect(fee).to.equal("bbbbbbbbbbbbbbbbbbbbbhoLvTp")
     })
@@ -293,7 +293,7 @@ describe("test utils", function() {
       expect(fee).to.equal("jjjjjjjjjjjjjjjjjjjjBZbvri")
     })
 
-    xit("return bbbbbbbbbbbbbbbbbbbbBZjvri if the token is bwt", function() {
+    it("return bbbbbbbbbbbbbbbbbbbbBZjvri if the token is bwt", function() {
       let fee = utils.getAccountOne("bwt")
       expect(fee).to.equal("bbbbbbbbbbbbbbbbbbbbBZjvri")
     })

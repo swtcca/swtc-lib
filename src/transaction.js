@@ -2,8 +2,9 @@
 var util = require("util")
 var Event = require("events").EventEmitter
 var utf8 = require("utf8")
-var baselib = require("swtc-wallet").Wallet
-const fee = require("./config").fee || 10000
+var baselib = require("swtc-factory").Wallet
+var utils = require("swtc-utils")
+
 /**
  * Post request to server with account secret
  * @param remote
@@ -15,7 +16,7 @@ function Transaction(remote, filter) {
   var self = this
   self._remote = remote
   self._token = remote._token || "swt"
-  self.tx_json = { Flags: 0, Fee: fee }
+  self.tx_json = { Flags: 0, Fee: utils.getFee(self._token) }
   self._filter =
     filter ||
     function(v) {
@@ -199,7 +200,6 @@ Transaction.prototype.setDestinationTag = function(tag) {
 */
 
 function MaxAmount(amount) {
-  let utils = require("./utils")
   if (typeof amount === "string" && Number(amount)) {
     var _amount = parseInt(Number(amount) * 1.0001)
     return String(_amount)
@@ -243,7 +243,6 @@ Transaction.prototype.setPath = function(key) {
  * @param amount
  */
 Transaction.prototype.setSendMax = function(amount) {
-  let utils = require("./utils")
   if (!utils.isValidAmount(amount)) {
     return new Error("invalid send max amount")
   }
