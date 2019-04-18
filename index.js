@@ -2,7 +2,7 @@
 
 var Transaction = require("./src/transaction")
 var OrderBook = require("./src/orderbook")
-var Wallet = require("swtc-wallet").Wallet
+var Wallet = require("swtc-factory").Wallet
 
 exports.Transaction = Transaction
 exports.OrderBook = OrderBook
