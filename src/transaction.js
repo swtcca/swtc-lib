@@ -388,7 +388,7 @@ Transaction.prototype.sign = function(callback) {
   if (self.tx_json.Sequence) {
     signing(self, callback)
     // callback(null, signing(self));
-  } else {
+  } else if ("requestAccountInfo" in this._remote) {
     var req = this._remote.requestAccountInfo({
       account: self.tx_json.Account,
       type: "trust"
@@ -399,6 +399,18 @@ Transaction.prototype.sign = function(callback) {
       signing(self, callback)
       // callback(null, signing(self));
     })
+  } else if ("getAccountBalances" in this._remote) {
+    this._remote
+      .getAccountBalances(self.tx_json.Account)
+      .then(response => {
+        self.tx_json.Sequence = response.data.sequence
+        signing(self, callback)
+      })
+      .catch(error => {
+        throw error
+      })
+  } else {
+    throw new Error("can not sign transaction")
   }
 }
 
