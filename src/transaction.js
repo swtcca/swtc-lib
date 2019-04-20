@@ -64,6 +64,104 @@ Transaction.buildPaymentTx = function(remote, options) {
   return tx
 }
 
+/**
+ * offer create
+ * @param options
+ *    type: 'Sell' or 'Buy'
+ *    source|from|account maker account, required
+ *    taker_gets|pays amount to take out, required
+ *    taker_pays|gets amount to take in, required
+ * @returns {Transaction}
+ */
+Transaction.buildOfferCreateTx = function(remote, options) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+
+  var offer_type = options.type
+  var src = options.source || options.from || options.account
+  var taker_gets = options.taker_gets || options.pays
+  var taker_pays = options.taker_pays || options.gets
+  var app = options.app
+
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (
+    typeof offer_type !== "string" ||
+    !~Transaction.OfferTypes.indexOf(offer_type)
+  ) {
+    tx.tx_json.offer_type = new Error("invalid offer type")
+    return tx
+  }
+  if (typeof taker_gets === "string" && !Number(taker_gets)) {
+    tx.tx_json.taker_gets2 = new Error("invalid to pays amount")
+    return tx
+  }
+  if (typeof taker_gets === "object" && !utils.isValidAmount(taker_gets)) {
+    tx.tx_json.taker_gets2 = new Error("invalid to pays amount object")
+    return tx
+  }
+  if (typeof taker_pays === "string" && !Number(taker_pays)) {
+    tx.tx_json.taker_pays2 = new Error("invalid to gets amount")
+    return tx
+  }
+  if (typeof taker_pays === "object" && !utils.isValidAmount(taker_pays)) {
+    tx.tx_json.taker_pays2 = new Error("invalid to gets amount object")
+    return tx
+  }
+  if (app && !/^[0-9]*[1-9][0-9]*$/.test(app)) {
+    // 正整数
+    tx.tx_json.app = new Error("invalid app, it is a positive integer.")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "OfferCreate"
+  if (offer_type === "Sell") tx.setFlags(offer_type)
+  if (app) tx.tx_json.AppType = app
+  tx.tx_json.Account = src
+  tx.tx_json.TakerPays = utils.ToAmount(taker_pays, this._token)
+  tx.tx_json.TakerGets = utils.ToAmount(taker_gets, this._token)
+
+  return tx
+}
+
+/**
+ * offer cancel
+ * @param options
+ *    source|from|account source account, required
+ *    sequence, required
+ * @returns {Transaction}
+ */
+Transaction.buildOfferCancelTx = function(remote, options) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+
+  var src = options.source || options.from || options.account
+  var sequence = options.sequence
+
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (!Number(sequence)) {
+    tx.tx_json.sequence = new Error("invalid sequence param")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "OfferCancel"
+  tx.tx_json.Account = src
+  tx.tx_json.OfferSequence = Number(sequence)
+
+  return tx
+}
+
 Transaction.set_clear_flags = {
   AccountSet: {
     asfRequireDest: 1,
