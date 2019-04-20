@@ -559,6 +559,7 @@ Transaction.prototype.submit = function(callback) {
       if (err) {
         return callback("sign error: " + err)
       } else {
+        blob
         var data = {
           tx_blob: self.tx_json.blob
         }
