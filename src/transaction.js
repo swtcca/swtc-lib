@@ -35,7 +35,7 @@ util.inherits(Transaction, Event)
  *    amount payment amount, required
  * @returns {Transaction}
  */
-Transaction.buildPaymentTx = function(remote, options) {
+Transaction.buildPaymentTx = function(options, remote = {}) {
   const tx = new Transaction(remote)
   if (options === null || typeof options !== "object") {
     tx.tx_json.obj = new Error("invalid options type")
@@ -73,7 +73,7 @@ Transaction.buildPaymentTx = function(remote, options) {
  *    taker_pays|gets amount to take in, required
  * @returns {Transaction}
  */
-Transaction.buildOfferCreateTx = function(remote, options) {
+Transaction.buildOfferCreateTx = function(options, remote = {}) {
   var tx = new Transaction(remote)
   if (options === null || typeof options !== "object") {
     tx.tx_json.obj = new Error("invalid options type")
@@ -136,7 +136,7 @@ Transaction.buildOfferCreateTx = function(remote, options) {
  *    sequence, required
  * @returns {Transaction}
  */
-Transaction.buildOfferCancelTx = function(remote, options) {
+Transaction.buildOfferCancelTx = function(options, remote = {}) {
   var tx = new Transaction(remote)
   if (options === null || typeof options !== "object") {
     tx.tx_json.obj = new Error("invalid options type")
@@ -501,6 +501,16 @@ Transaction.prototype.sign = function(callback) {
   } else if ("getAccountBalances" in this._remote) {
     this._remote
       .getAccountBalances(self.tx_json.Account)
+      .then(data => {
+        self.tx_json.Sequence = data.sequence
+        signing(self, callback)
+      })
+      .catch(error => {
+        throw error
+      })
+  } else if ("_axios" in this._remote) {
+    this._remote._axios
+      .get(`accounts/${self.tx_json.Account}/balances`)
       .then(response => {
         self.tx_json.Sequence = response.data.sequence
         signing(self, callback)
@@ -547,7 +557,6 @@ Transaction.prototype.submit = function(callback) {
     //签名之后传给底层
     self.sign(function(err, blob) {
       if (err) {
-        blob
         return callback("sign error: " + err)
       } else {
         var data = {
@@ -563,6 +572,34 @@ Transaction.prototype.submit = function(callback) {
       tx_json: self.tx_json
     }
     self._remote._submit("submit", data, self._filter, callback)
+  }
+}
+
+Transaction.prototype.submitApi = function() {
+  var self = this
+  for (var key in self.tx_json) {
+    if (self.tx_json[key] instanceof Error) {
+      return Promise.reject(self.tx_json[key].message)
+    }
+  }
+
+  var data = {}
+  if ("blob" in self.tx_json) {
+    data = {
+      blob: self.tx_json.blob
+    }
+    if ("postBlob" in self._remote) {
+      // api remote
+      return self._remote.postBlob(data)
+    } else if ("_axios" in self._remote) {
+      // api remote
+      return self._remote._axios.post(`blob`, data)
+    } else {
+      // use api.jingtum.com directly
+      return axios.post(`https://api.jingtum.com/v2/blob`, data)
+    }
+  } else {
+    return Promise.reject("please local sign before this submit")
   }
 }
 
