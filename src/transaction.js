@@ -4,6 +4,7 @@ var Event = require("events").EventEmitter
 var utf8 = require("utf8")
 var baselib = require("swtc-factory").Wallet
 var utils = require("swtc-utils")
+const axios = require("axios")
 
 /**
  * Post request to server with account secret
@@ -410,7 +411,18 @@ Transaction.prototype.sign = function(callback) {
         throw error
       })
   } else {
-    throw new Error("can not sign transaction")
+    // use api.jingtum.com to get sequence
+    axios
+      .get(
+        `https://api.jingtum.com/v2/accounts/${self.tx_json.Account}/balances`
+      )
+      .then(response => {
+        self.tx_json.Sequence = response.data.sequence
+        signing(self, callback)
+      })
+      .catch(error => {
+        throw error
+      })
   }
 }
 
