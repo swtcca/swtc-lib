@@ -26,6 +26,43 @@ function Transaction(remote, filter) {
 }
 util.inherits(Transaction, Event)
 
+/*
+ * static function build payment tx
+ * @param options
+ *    source|from|account source account, required
+ *    destination|to destination account, required
+ *    amount payment amount, required
+ * @returns {Transaction}
+ */
+Transaction.buildPaymentTx = function(remote, options) {
+  const tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  const src = options.source || options.from || options.account
+  const dst = options.destination || options.to
+  const amount = options.amount
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (!utils.isValidAddress(dst)) {
+    tx.tx_json.dst = new Error("invalid destination address")
+    return tx
+  }
+  if (!utils.isValidAmount(amount)) {
+    tx.tx_json.amount = new Error("invalid amount")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "Payment"
+  tx.tx_json.Account = src
+  tx.tx_json.Amount = utils.ToAmount(amount)
+  tx.tx_json.Destination = dst
+  return tx
+}
+
 Transaction.set_clear_flags = {
   AccountSet: {
     asfRequireDest: 1,

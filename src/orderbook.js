@@ -4,7 +4,6 @@
 var util = require("util")
 var Event = require("events").EventEmitter
 var utils = require("swtc-utils")
-const currency = utils.getCurrency()
 
 /**
  * order book stub for all order book
