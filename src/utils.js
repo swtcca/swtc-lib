@@ -7,7 +7,7 @@ var _extend = require("lodash/extend")
 var _ = require("lodash")
 var utf8 = require("utf8")
 const SWTCCHAINS = require("swtc-chains")
-var bignumber = require("bignumber.js")
+var Bignumber = require("bignumber.js")
 
 // from jcc
 var getChains = function(chain_or_token = "SWT") {
@@ -178,7 +178,7 @@ function isValidAmount0(amount, token = "SWT") {
  */
 function parseAmount(amount, token = "SWT") {
   if (typeof amount === "string" && !Number.isNaN(Number(amount))) {
-    var value = String(new bignumber(amount).dividedBy(1000000.0))
+    var value = String(new Bignumber(amount).dividedBy(1000000.0))
     let currency = getCurrency(token)
     return { value: value, currency: currency, issuer: "" }
   } else if (typeof amount === "object" && isValidAmount(amount)) {
@@ -402,7 +402,7 @@ function isAmountZero(amount) {
 function AmountNegate(amount) {
   if (!amount) return amount
   return {
-    value: String(-new bignumber(amount.value)),
+    value: String(-new Bignumber(amount.value)),
     currency: amount.currency,
     issuer: amount.issuer
   }
@@ -413,7 +413,7 @@ function AmountAdd(amount1, amount2) {
   if (!amount2) return amount1
   if (amount1 && amount2) {
     return {
-      value: String(new bignumber(amount1.value).plus(amount2.value)),
+      value: String(new Bignumber(amount1.value).plus(amount2.value)),
       currency: amount1.currency,
       issuer: amount1.issuer
     }
@@ -426,7 +426,7 @@ function AmountSubtract(amount1, amount2) {
 }
 
 function AmountRatio(amount1, amount2) {
-  return String(new bignumber(amount1.value).dividedBy(amount2.value))
+  return String(new Bignumber(amount1.value).dividedBy(amount2.value))
 }
 
 function getPrice(effect, funded) {
@@ -588,7 +588,7 @@ function processTx(txn, account) {
           )
           effect.type = sell ? "sold" : "bought"
           if (node.fields.OfferFeeRateNum)
-            effect.rate = new bignumber(
+            effect.rate = new Bignumber(
               parseInt(node.fields.OfferFeeRateNum, 16)
             )
               .div(parseInt(node.fields.OfferFeeRateDen, 16))
@@ -619,7 +619,7 @@ function processTx(txn, account) {
             )
             effect.type = sell ? "sold" : "bought"
             if (node.fields.OfferFeeRateNum)
-              effect.rate = new bignumber(
+              effect.rate = new Bignumber(
                 parseInt(node.fields.OfferFeeRateNum, 16)
               )
                 .div(parseInt(node.fields.OfferFeeRateDen, 16))
@@ -689,7 +689,7 @@ function processTx(txn, account) {
       }
     }
     if (node.entryType === "Brokerage") {
-      result.rate = new bignumber(parseInt(node.fields.OfferFeeRateNum, 16))
+      result.rate = new Bignumber(parseInt(node.fields.OfferFeeRateNum, 16))
         .div(parseInt(node.fields.OfferFeeRateDen, 16))
         .toNumber()
     }
@@ -765,6 +765,25 @@ var parseKey = function(key, token = "SWT") {
   }
 }
 
+/**
+ * return string if swt amount
+ * @param amount
+ * @returns {Amount}
+ */
+function ToAmount(amount, token = "SWT") {
+  if (amount.value && Number(amount.value) > 100000000000) {
+    return new Error("invalid amount: amount's maximum value is 100000000000")
+  }
+  const currency = getCurrency(token)
+  if (amount.currency === currency) {
+    // return String(parseInt((new BigNumber(amount.value)).mul(1000000.0)))
+    return String(
+      parseInt(new Bignumber(amount.value).mul(1000000.0).toString(), 10)
+    )
+  }
+  return amount
+}
+
 module.exports = {
   hexToString: hexToString,
   stringToHex: stringToHex,
@@ -788,5 +807,7 @@ module.exports = {
   getFee: getFee,
   getAccountZero: getAccountZero,
   getAccountOne: getAccountOne,
-  parseKey: parseKey
+  parseKey: parseKey,
+  // from remote
+  ToAmount: ToAmount
 }

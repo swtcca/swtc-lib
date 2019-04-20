@@ -517,4 +517,23 @@ describe("test utils", function() {
       expect(key).to.equal(null)
     })
   })
+  describe("test ToAmount", function() {
+    it("return 9000000 if the amount is for native currency {value: 99999, currency: 'SWT', issuer: ''}", function() {
+      let res = utils.ToAmount({ value: 9, currency: "SWT", issuer: "" })
+      expect(res).to.equal("9000000")
+    })
+
+    it("return same for other currency", function() {
+      let res = utils.ToAmount({
+        value: 1,
+        currency: "CNY",
+        issuer: "abcdefghijklmnopqrstuvw"
+      })
+      expect(res).to.deep.equal({
+        value: 1,
+        currency: "CNY",
+        issuer: "abcdefghijklmnopqrstuvw"
+      })
+    })
+  })
 })
