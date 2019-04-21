@@ -27,6 +27,66 @@ function Transaction(remote, filter) {
 }
 util.inherits(Transaction, Event)
 
+Transaction.set_clear_flags = {
+  AccountSet: {
+    asfRequireDest: 1,
+    asfRequireAuth: 2,
+    asfDisallowSWT: 3,
+    asfDisableMaster: 4,
+    asfNoFreeze: 6,
+    asfGlobalFreeze: 7
+  }
+}
+
+Transaction.flags = {
+  // Universal flags can apply to any transaction type
+  Universal: {
+    FullyCanonicalSig: 0x80000000
+  },
+
+  AccountSet: {
+    RequireDestTag: 0x00010000,
+    OptionalDestTag: 0x00020000,
+    RequireAuth: 0x00040000,
+    OptionalAuth: 0x00080000,
+    DisallowSWT: 0x00100000,
+    AllowSWT: 0x00200000
+  },
+
+  TrustSet: {
+    SetAuth: 0x00010000,
+    NoSkywell: 0x00020000,
+    SetNoSkywell: 0x00020000,
+    ClearNoSkywell: 0x00040000,
+    SetFreeze: 0x00100000,
+    ClearFreeze: 0x00200000
+  },
+
+  OfferCreate: {
+    Passive: 0x00010000,
+    ImmediateOrCancel: 0x00020000,
+    FillOrKill: 0x00040000,
+    Sell: 0x00080000
+  },
+
+  Payment: {
+    NoSkywellDirect: 0x00010000,
+    PartialPayment: 0x00020000,
+    LimitQuality: 0x00040000
+  },
+
+  RelationSet: {
+    Authorize: 0x00000001,
+    Freeze: 0x00000011
+  }
+}
+
+Transaction.OfferTypes = ["Sell", "Buy"]
+Transaction.RelationTypes = ["trust", "authorize", "freeze", "unfreeze"]
+Transaction.AccountSetTypes = ["property", "delegate", "signer"]
+
+// start of static methods
+
 /*
  * static function build payment tx
  * @param options
@@ -123,8 +183,8 @@ Transaction.buildOfferCreateTx = function(options, remote = {}) {
   if (offer_type === "Sell") tx.setFlags(offer_type)
   if (app) tx.tx_json.AppType = app
   tx.tx_json.Account = src
-  tx.tx_json.TakerPays = utils.ToAmount(taker_pays, this._token)
-  tx.tx_json.TakerGets = utils.ToAmount(taker_gets, this._token)
+  tx.tx_json.TakerPays = utils.ToAmount(taker_pays, remote._token || "swt")
+  tx.tx_json.TakerGets = utils.ToAmount(taker_gets, remote._token || "swt")
 
   return tx
 }
@@ -162,63 +222,308 @@ Transaction.buildOfferCancelTx = function(options, remote = {}) {
   return tx
 }
 
-Transaction.set_clear_flags = {
-  AccountSet: {
-    asfRequireDest: 1,
-    asfRequireAuth: 2,
-    asfDisallowSWT: 3,
-    asfDisableMaster: 4,
-    asfNoFreeze: 6,
-    asfGlobalFreeze: 7
+/**
+ * contract
+ * @param options
+ *    account, required
+ *    amount, required
+ *    payload, required
+ * @returns {Transaction}
+ */
+Transaction.deployContractTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  var account = options.account
+  var amount = options.amount
+  var payload = options.payload
+  var params = options.params
+  if (!utils.isValidAddress(account)) {
+    tx.tx_json.account = new Error("invalid address")
+    return tx
+  }
+  if (isNaN(Number(amount))) {
+    tx.tx_json.amount = new Error("invalid amount")
+    return tx
+  }
+  if (typeof payload !== "string") {
+    tx.tx_json.payload = new Error("invalid payload: type error.")
+    return tx
+  }
+  if (params && !Array.isArray(params)) {
+    tx.tx_json.params = new Error("invalid options type")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "ConfigContract"
+  tx.tx_json.Account = account
+  tx.tx_json.Amount = Number(amount) * 1000000
+  tx.tx_json.Method = 0
+  tx.tx_json.Payload = payload
+  tx.tx_json.Args = []
+  for (var i in params) {
+    var obj = {}
+    obj.Arg = {
+      Parameter: utils.stringToHex(params[i])
+    }
+    tx.tx_json.Args.push(obj)
+  }
+  return tx
+}
+
+/**
+ * contract
+ * @param options
+ *    account, required
+ *    des, required
+ *    params, required
+ * @returns {Transaction}
+ */
+Transaction.callContractTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  var account = options.account
+  var des = options.destination
+  var params = options.params
+  var foo = options.foo // 函数名
+  if (!utils.isValidAddress(account)) {
+    tx.tx_json.account = new Error("invalid address")
+    return tx
+  }
+  if (!utils.isValidAddress(des)) {
+    tx.tx_json.des = new Error("invalid destination")
+    return tx
+  }
+
+  if (params && !Array.isArray(params)) {
+    tx.tx_json.params = new Error("invalid options type")
+    return tx
+  }
+  if (typeof foo !== "string") {
+    tx.tx_json.foo = new Error("foo must be string")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "ConfigContract"
+  tx.tx_json.Account = account
+  tx.tx_json.Method = 1
+  tx.tx_json.ContractMethod = utils.stringToHex(foo)
+  tx.tx_json.Destination = des
+  tx.tx_json.Args = []
+  for (var i in params) {
+    if (typeof params[i] !== "string") {
+      tx.tx_json.params = new Error("params must be string")
+      return tx
+    }
+    var obj = {}
+    obj.Arg = {
+      Parameter: utils.stringToHex(params[i])
+    }
+    tx.tx_json.Args.push(obj)
+  }
+  return tx
+}
+
+// signer set, seems discontinued
+Transaction.buildSignTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "Signer"
+  tx.tx_json.blob = options.blob
+
+  return tx
+}
+
+/**
+ * account information set
+ * @param options
+ *    type: Transaction.AccountSetTypes
+ * @returns {Transaction}
+ */
+Transaction.buildAccountSetTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  if (Transaction.AccountSetTypes.indexOf(options.type) === -1) {
+    tx.tx_json.type = new Error("invalid account set type")
+    return tx
+  }
+  switch (options.type) {
+    case "property":
+      return Transaction.__buildAccountSet(options, tx)
+    case "delegate":
+      return Transaction.__buildDelegateKeySet(options, tx)
+    case "signer":
+      return Transaction.__buildSignerSet(options, tx)
   }
 }
 
-Transaction.flags = {
-  // Universal flags can apply to any transaction type
-  Universal: {
-    FullyCanonicalSig: 0x80000000
-  },
-
-  AccountSet: {
-    RequireDestTag: 0x00010000,
-    OptionalDestTag: 0x00020000,
-    RequireAuth: 0x00040000,
-    OptionalAuth: 0x00080000,
-    DisallowSWT: 0x00100000,
-    AllowSWT: 0x00200000
-  },
-
-  TrustSet: {
-    SetAuth: 0x00010000,
-    NoSkywell: 0x00020000,
-    SetNoSkywell: 0x00020000,
-    ClearNoSkywell: 0x00040000,
-    SetFreeze: 0x00100000,
-    ClearFreeze: 0x00200000
-  },
-
-  OfferCreate: {
-    Passive: 0x00010000,
-    ImmediateOrCancel: 0x00020000,
-    FillOrKill: 0x00040000,
-    Sell: 0x00080000
-  },
-
-  Payment: {
-    NoSkywellDirect: 0x00010000,
-    PartialPayment: 0x00020000,
-    LimitQuality: 0x00040000
-  },
-
-  RelationSet: {
-    Authorize: 0x00000001,
-    Freeze: 0x00000011
+/**
+ * add wallet relation set
+ * @param options
+ *    type: Transaction.RelationTypes
+ *    source|from|account source account, required
+ *    limit limt amount, required
+ *    quality_out, optional
+ *    quality_in, optional
+ * @returns {Transaction}
+ */
+Transaction.buildRelationTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  if (!~Transaction.RelationTypes.indexOf(options.type)) {
+    tx.tx_json.type = new Error("invalid relation type")
+    return tx
+  }
+  switch (options.type) {
+    case "trust":
+      return Transaction.__buildTrustSet(options, tx)
+    case "authorize":
+    case "freeze":
+    case "unfreeze":
+      return Transaction.__buildRelationSet(options, tx)
   }
 }
 
-Transaction.OfferTypes = ["Sell", "Buy"]
-Transaction.RelationTypes = ["trust", "authorize", "freeze", "unfreeze"]
-Transaction.AccountSetTypes = ["property", "delegate", "signer"]
+Transaction.__buildTrustSet = function(options, tx) {
+  var src = options.source || options.from || options.account
+  var limit = options.limit
+  var quality_out = options.quality_out
+  var quality_in = options.quality_in
+
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (!utils.isValidAmount(limit)) {
+    tx.tx_json.limit = new Error("invalid amount")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "TrustSet"
+  tx.tx_json.Account = src
+  tx.tx_json.LimitAmount = limit
+  if (quality_in) {
+    tx.tx_json.QualityIn = quality_in
+  }
+  if (quality_out) {
+    tx.tx_json.QualityOut = quality_out
+  }
+  return tx
+}
+
+Transaction.__buildRelationSet = function(options, tx) {
+  var src = options.source || options.from || options.account
+  var des = options.target
+  var limit = options.limit
+
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (!utils.isValidAddress(des)) {
+    tx.tx_json.des = new Error("invalid target address")
+    return tx
+  }
+  if (!utils.isValidAmount(limit)) {
+    tx.tx_json.limit = new Error("invalid amount")
+    return tx
+  }
+
+  tx.tx_json.TransactionType =
+    options.type === "unfreeze" ? "RelationDel" : "RelationSet"
+  tx.tx_json.Account = src
+  tx.tx_json.Target = des
+  tx.tx_json.RelationType = options.type === "authorize" ? 1 : 3
+  tx.tx_json.LimitAmount = limit
+  return tx
+}
+
+/**
+ * account information set
+ * @param options
+ *    set_flag, flags to set
+ *    clear_flag, flags to clear
+ * @returns {Transaction}
+ */
+Transaction.__buildAccountSet = function(options, tx) {
+  var src = options.source || options.from || options.account
+  var set_flag = options.set_flag || options.set
+  var clear_flag = options.clear_flag || options.clear
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "AccountSet"
+  tx.tx_json.Account = src
+
+  var SetClearFlags = Transaction.set_clear_flags.AccountSet
+
+  function prepareFlag(flag) {
+    return typeof flag === "number"
+      ? flag
+      : SetClearFlags[flag] || SetClearFlags["asf" + flag]
+  }
+
+  if (set_flag && (set_flag = prepareFlag(set_flag))) {
+    tx.tx_json.SetFlag = set_flag
+  }
+
+  if (clear_flag && (clear_flag = prepareFlag(clear_flag))) {
+    tx.tx_json.ClearFlag = clear_flag
+  }
+
+  return tx
+}
+
+/**
+ * delegate key setting
+ * @param options
+ *    source|account|from, source account, required
+ *    delegate_key, delegate account, required
+ * @returns {Transaction}
+ */
+Transaction.__buildDelegateKeySet = function(options, tx) {
+  var src = options.source || options.account || options.from
+  var delegate_key = options.delegate_key
+
+  if (!utils.isValidAddress(src)) {
+    tx.tx_json.src = new Error("invalid source address")
+    return tx
+  }
+  if (!utils.isValidAddress(delegate_key)) {
+    tx.tx_json.delegate_key = new Error("invalid regular key address")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "SetRegularKey"
+  tx.tx_json.Account = src
+  tx.tx_json.RegularKey = delegate_key
+
+  return tx
+}
+
+Transaction.__buildSignerSet = function() {
+  // TODO
+  return null
+}
+
+// end of static transaction builds
 
 /**
  * parse json transaction as tx_json

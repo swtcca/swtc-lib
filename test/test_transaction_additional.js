@@ -174,7 +174,7 @@ describe("test transaction additions", function() {
     it("sign with sequence set", function() {
       let callback = (error, blob) => {
         if (error) {
-          throw error
+          expect(error).to.equal("should not throw")
         } else {
           expect(tx.tx_json.blob).to.equal(blob)
         }
@@ -182,7 +182,7 @@ describe("test transaction additions", function() {
       tx.sign(callback)
     })
     it("sign without sequence set", function() {
-      let tx = TX.buildOfferCreateTx(
+      let tx = TX.buildOfferCancelTx(
         { account: DATA.address, sequence: 100 },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
