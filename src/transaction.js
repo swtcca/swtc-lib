@@ -523,6 +523,62 @@ Transaction.__buildSignerSet = function() {
   return null
 }
 
+/**
+ * Brokerage 设置挂单手续费
+ * @param options
+ *    account, required
+ *    mol|molecule, required
+ *    den|denominator, required
+ *    app, required
+ *    amount, required
+ * @returns {Transaction}
+ */
+Transaction.buildBrokerageTx = function(options, remote = {}) {
+  var tx = new Transaction(remote)
+  if (options === null || typeof options !== "object") {
+    tx.tx_json.obj = new Error("invalid options type")
+    return tx
+  }
+  var account = options.account
+  var mol = options.mol || options.molecule
+  var den = options.den || options.denominator
+  var app = options.app
+  var amount = options.amount
+  if (!utils.isValidAddress(account)) {
+    tx.tx_json.src = new Error("invalid address")
+    return tx
+  }
+  if (!/^\d+$/.test(mol)) {
+    // (正整数 + 0)
+    tx.tx_json.mol = new Error("invalid mol, it is a positive integer or zero.")
+    return tx
+  }
+  if (!/^[0-9]*[1-9][0-9]*$/.test(den) || !/^[0-9]*[1-9][0-9]*$/.test(app)) {
+    // 正整数
+    tx.tx_json.den = new Error("invalid den/app, it is a positive integer.")
+    return tx
+  }
+  if (mol > den) {
+    tx.tx_json.app = new Error(
+      "invalid mol/den, molecule can not exceed denominator."
+    )
+    return tx
+  }
+  if (!utils.isValidAmount(amount)) {
+    tx.tx_json.amount = new Error("invalid amount")
+    return tx
+  }
+
+  tx.tx_json.TransactionType = "Brokerage"
+  tx.tx_json.Account = account // 管理员账号
+  tx.tx_json.OfferFeeRateNum = mol // 分子(正整数 + 0)
+  tx.tx_json.OfferFeeRateDen = den // 分母(正整数)
+  tx.tx_json.AppType = app // 应用来源(正整数)
+  tx.tx_json.Amount = utils.ToAmount(amount) // 币种,这里amount字段中的value值只是占位，没有实际意义
+
+  return tx
+}
+
 // end of static transaction builds
 
 /**

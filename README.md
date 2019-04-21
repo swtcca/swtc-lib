@@ -12,6 +12,7 @@
 
 ## Changes
 
+- add methods buildRelationTx()
 - support null Remote, swtc-api Remote and swtc-lib Remote
 - add method submitApi() to submit transactions to https://api.jingtum.com by default
 - add methods buildPaymentTx(), buildOfferCreateTX(), buildOfferCancelTx()
@@ -24,6 +25,7 @@
 ```bash
   $ npm install swtc-transaction  // node.js and web app
 ```
+
 ```javascript
 const Transaction = require("swtc-transaction").Transaction // cjs import
 // or
@@ -31,21 +33,24 @@ import { Transaction } from "swtc-transaction" // esm import
 ```
 
 ## Using `swtc-transaction`
+
 - `const tx = Transaction.buildPaymentTx(options)`
 - `const tx = Transaction.buildPaymentTx(options, remote={})`
 - `const tx = Transaction.buildPaymentTx(options, remote={_axios: axios.create({})})`
 - `const tx = Transaction.buildOfferCreateTx(options, remote={})`
 - `const tx = Transaction.buildOfferCancelTx(options, remote={})`
 - local sign and submit
+
 ```javascript
 tx.addMemo() // optional
-tx.setSecret('s......................')
-tx.setSequence(100)  // optional, automatic during signing
+tx.setSecret("s......................")
+tx.setSequence(100) // optional, automatic during signing
 tx.sign(callback) // async function
 tx.submitApi() // returns promise
 ```
 
 ## example
+
 ```javascript
 > tx = TX.buildPaymentTx({source: DATA.address, to: DATA.address2, amount: {value: 0.1, currency: 'SWT', issuer: ''}})
 Transaction {
@@ -122,7 +127,7 @@ Promise {}
         hash:
          '48D94F52CD0D9FD60634DEB5886D27149551235BD6CDA1C752F817C3290C327B' } } }
 
-> 
+>
 ```
 
 ## Involving `swtc-transaction`

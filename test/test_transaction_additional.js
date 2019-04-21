@@ -203,4 +203,72 @@ describe("test transaction additions", function() {
       expect(result).to.be.an("object")
     })
   })
+  describe("test relation transaction", function() {
+    this.timeout(15000)
+    let tx = TX.buildRelationTx({
+      target: DATA.address2,
+      account: DATA.address,
+      type: "authorize",
+      limit: { value: 11, currency: "CNY", issuer: DATA.issuer }
+    })
+    it("if did not provide remote", function() {
+      expect(tx._remote).to.deep.equal({})
+    })
+    it("remote using tapi", function() {
+      let tx = TX.buildRelationTx(
+        {
+          target: DATA.address2,
+          account: DATA.address,
+          type: "trust",
+          limit: { value: 11, currency: "CNY", issuer: DATA.issuer }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      expect(tx._remote).to.be.an("object")
+    })
+    it("setSecret", function() {
+      tx.setSecret(DATA.secret)
+      expect(tx._secret).to.equal(DATA.secret)
+    })
+    it("setSequence", function() {
+      tx.setSequence(100)
+      expect(tx.tx_json.Sequence).to.equal(100)
+    })
+    it("sign with sequence set", function() {
+      let callback = (error, blob) => {
+        if (error) {
+          expect(error).to.equal("should not throw")
+        } else {
+          expect(tx.tx_json.blob).to.equal(blob)
+        }
+      }
+      tx.sign(callback)
+    })
+    it("sign without sequence set", function() {
+      let tx = TX.buildRelationTx(
+        {
+          target: DATA.address2,
+          account: DATA.address,
+          type: "freeze",
+          limit: { value: 11, currency: "CNY", issuer: DATA.issuer }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      tx.setSecret(DATA.secret)
+      let callback = (error, blob) => {
+        if (error) {
+          expect(error).to.equal("should not throw")
+        } else {
+          expect(tx.tx_json.Sequence).to.be.a("number")
+          expect(tx.tx_json.blob).to.equal(blob)
+        }
+      }
+      tx.sign(callback)
+    })
+    it("submit", async function() {
+      let result = await tx.submitApi()
+      // console.log(result.data)
+      expect(result).to.be.an("object")
+    })
+  })
 })
