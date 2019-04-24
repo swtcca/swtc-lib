@@ -12,7 +12,7 @@ var Bignumber = require("bignumber.js")
 // from jcc
 var getChains = function(chain_or_token = "SWT") {
   return SWTCCHAINS.filter(
-    chain =>
+    (chain) =>
       chain.code.toLowerCase === chain_or_token.toLowerCase() ||
       chain.currency.toLowerCase() === chain_or_token.toLowerCase()
   )

@@ -1,8 +1,8 @@
 {
   "name": "swtc-transaction",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "swtc transaction package",
-  "main": "index.js",
+  "main": "src/index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
@@ -10,9 +10,11 @@
   "scripts": {
     "prettier": "prettier",
     "pretty-quick": "pretty-quick",
-    "prettier:check": "prettier -c --no-semi index.js src/*.js",
-    "prettier:tabs": "prettier --no-semi --use-tabs --write package.json index.js src/*.js",
-    "eslint": "eslint index.js src/*.js",
+    "prettier:check": "prettier -c tssrc/*.ts tssrc/*.js",
+    "prettier:tabs": "prettier --use-tabs --write package.json tssrc/*.ts tssrc/*.js",
+    "tsc": "cp tssrc/*js src/ && tsc",
+    "tslint": "tslint tssrc/*.ts",
+    "eslint": "eslint tssrc/*.js",
     "gulp": "gulp dev",
     "gulp:production": "gulp production",
     "build": "webpack",
@@ -51,6 +53,7 @@
     "utf8": "^2.1.2"
   },
   "devDependencies": {
+    "@types/node": "^11.13.7",
     "chai": "^4.2.0",
     "chai-json-schema": "^1.5.0",
     "eslint": "^5.15.3",
@@ -64,6 +67,8 @@
     "pretty-quick": "^1.10.0",
     "sha1": "^1.1.1",
     "sinon": "^7.2.4",
+    "tslint": "^5.16.0",
+    "typescript": "^3.4.5",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.2.3",
     "webpack-stream": "^5.2.1"

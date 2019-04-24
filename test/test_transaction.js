@@ -1,6 +1,6 @@
 const chai = require("chai")
 const expect = chai.expect
-const Transaction = require("../src/transaction")
+const Transaction = require("../").Transaction
 const Event = require("events").EventEmitter
 const Remote = require("./remote").Remote
 const config = require("./config")
