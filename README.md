@@ -12,6 +12,7 @@
 
 ## Changes
 
+- typescript support
 - add methods buildRelationTx()
 - support null Remote, swtc-api Remote and swtc-lib Remote
 - add method submitApi() to submit transactions to https://api.jingtum.com by default
