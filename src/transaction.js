@@ -12,7 +12,7 @@ const axios = require("axios")
  * @constructor
  */
 function Transaction(remote, filter) {
-  Event.call(this)
+  //  Event.call(this)
 
   var self = this
   self._remote = remote
@@ -25,7 +25,7 @@ function Transaction(remote, filter) {
     }
   self._secret = void 0
 }
-util.inherits(Transaction, Event)
+//util.inherits(Transaction, Event)
 
 Transaction.set_clear_flags = {
   AccountSet: {

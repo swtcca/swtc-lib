@@ -24,7 +24,7 @@ describe("test Transaction", function() {
         Fee: 10000
       })
       expect(inst._filter instanceof Function).to.equal(true)
-      expect(inst instanceof Event).to.equal(true)
+      // expect(inst instanceof Event).to.equal(true)
       expect(inst._secret).to.equal(undefined)
       expect(inst._filter("a")).to.equal("a")
     })
@@ -43,7 +43,7 @@ describe("test Transaction", function() {
         Fee: 10
       })
       expect(inst._filter instanceof Function).to.equal(true)
-      expect(inst instanceof Event).to.equal(true)
+      // expect(inst instanceof Event).to.equal(true)
       expect(inst._secret).to.equal(undefined)
       expect(inst._filter("a")).to.equal("a")
     })
