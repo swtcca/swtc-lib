@@ -1,6 +1,4 @@
 "use strict"
-var util = require("util")
-var Event = require("events").EventEmitter
 var utf8 = require("utf8")
 var baselib = require("swtc-factory").Wallet
 var utils = require("swtc-utils")
@@ -12,8 +10,6 @@ const axios = require("axios")
  * @constructor
  */
 function Transaction(remote, filter) {
-  //  Event.call(this)
-
   var self = this
   self._remote = remote
   self._token = remote._token || "swt"
@@ -25,7 +21,6 @@ function Transaction(remote, filter) {
     }
   self._secret = void 0
 }
-//util.inherits(Transaction, Event)
 
 Transaction.set_clear_flags = {
   AccountSet: {
