@@ -2,7 +2,7 @@ const chai = require("chai")
 const expect = chai.expect
 const config = require("./config")
 const { testAddress, testCreateHash } = config
-let utils = require("../src/utils")
+let utils = require("../utils/utils")
 let txData = require("./tx_data")
 describe("test utils", function() {
   describe("test hexToString", function() {

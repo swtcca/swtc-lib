@@ -1,6 +1,6 @@
 {
   "name": "swtc-transaction",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "swtc transaction package",
   "main": "src/index.js",
   "directories": {
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "prettier": "prettier",
-    "pretty-quick": "pretty-quick",
+    "pretty-quick": "pretty-quick --branch transaction",
     "prettier:check": "prettier -c tssrc/*.ts tssrc/*.js",
     "prettier:tabs": "prettier --use-tabs --write package.json tssrc/*.ts tssrc/*.js",
     "tsc": "mkdir -p src && cp tssrc/*js src/ && tsc",

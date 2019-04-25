@@ -271,4 +271,75 @@ describe("test transaction additions", function() {
       expect(result).to.be.an("object")
     })
   })
+  describe("test .signPromise()", function() {
+    this.timeout(15000)
+    let tx = TX.buildPaymentTx({
+      source: DATA.address,
+      to: DATA.address2,
+      amount: { value: 0.1, currency: "SWT", issuer: "" }
+    })
+    it("remote using tapi", function() {
+      let tx = TX.buildPaymentTx(
+        {
+          source: DATA.address,
+          to: DATA.address2,
+          amount: { value: 0.1, currency: "SWT", issuer: "" }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      expect(tx._remote).to.be.an("object")
+    })
+    it("setSecret", function() {
+      tx.setSecret(DATA.secret)
+      expect(tx._secret).to.equal(DATA.secret)
+    })
+    it("setSequence", function() {
+      tx.setSequence(100)
+      expect(tx.tx_json.Sequence).to.equal(100)
+    })
+    it(".signPromise() with sequence set", async function() {
+      let blob = await tx.signPromise()
+      expect(tx.tx_json).to.have.property("blob")
+      expect(tx.tx_json.blob).to.be.equal(blob)
+    })
+    it("signPromise() without sequence set", async function() {
+      let tx = TX.buildPaymentTx(
+        {
+          source: DATA.address,
+          to: DATA.address2,
+          amount: { value: 0.1, currency: "SWT", issuer: "" }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      tx.setSecret(DATA.secret)
+      let blob = await tx.signPromise()
+      expect(tx.tx_json).to.have.property("Sequence")
+      expect(tx.tx_json.Sequence).to.be.a("number")
+      expect(tx.tx_json).to.have.property("blob")
+      expect(tx.tx_json.blob).to.be.equal(blob)
+    })
+  })
+  describe("test .submitPromise()", function() {
+    this.timeout(15000)
+    it(".submitPromise()", async function() {
+      let tx = TX.buildPaymentTx(
+        {
+          source: DATA.address,
+          to: DATA.address2,
+          amount: { value: 0.1, currency: "SWT", issuer: "" }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      tx.setSecret(DATA.secret)
+      let result = await tx.submitPromise()
+      expect(tx.tx_json).to.have.property("Sequence")
+      expect(tx.tx_json.Sequence).to.be.a("number")
+      expect(tx.tx_json).to.have.property("blob")
+      expect(result).to.have.property("data")
+      expect(result.data).to.have.property("success")
+      expect(result.data.success).to.be.true
+      expect(result.data).to.have.property("tx_blob")
+      expect(tx.tx_json.blob).to.be.equal(result.data.tx_blob)
+    })
+  })
 })
