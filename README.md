@@ -12,6 +12,7 @@
 
 ## Changes
 
+- typescript OrderBook
 - typescript support
 - add methods buildRelationTx()
 - support null Remote, swtc-api Remote and swtc-lib Remote
