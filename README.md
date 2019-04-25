@@ -12,6 +12,7 @@
 
 ## Changes
 
+- add method signPromise() and submitPromise()
 - typescript OrderBook
 - typescript support
 - add methods buildRelationTx()
