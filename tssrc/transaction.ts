@@ -798,92 +798,44 @@ class Transaction {
     }
   }
 
-  public signPromise() {
-    return new Promise((resolve, reject) => {
-      if (this.tx_json.Sequence) {
-        signing(this, (error, blob) => {
-          if (error) {
-            reject(error)
-          } else {
-            resolve(blob)
-          }
-        })
-        // callback(null, signing(this));
-      } else if ("requestAccountInfo" in this._remote) {
-        const req = this._remote.requestAccountInfo({
-          account: this.tx_json.Account,
-          type: "trust"
-        })
-        req.submit((err, data) => {
-          if (err) {
-            reject(err)
-          } else {
-            this.tx_json.Sequence = data.account_data.Sequence
-          }
-          signing(this, (error, blob) => {
-            if (error) {
-              reject(error)
-            } else {
-              resolve(blob)
-            }
-          })
-          // callback(null, signing(this));
-        })
-      } else if ("getAccountBalances" in this._remote) {
-        this._remote
-          .getAccountBalances(this.tx_json.Account)
-          .then(data => {
-            this.tx_json.Sequence = data.sequence
-            signing(this, (error, blob) => {
-              if (error) {
-                reject(error)
-              } else {
-                resolve(blob)
-              }
-            })
-          })
-          .catch(error => {
-            reject(error)
-          })
-      } else if ("_axios" in this._remote) {
-        this._remote._axios
-          .get(`accounts/${this.tx_json.Account}/balances`)
-          .then(response => {
-            this.tx_json.Sequence = response.data.sequence
-            signing(this, (error, blob) => {
-              if (error) {
-                reject(error)
-              } else {
-                resolve(blob)
-              }
-            })
-          })
-          .catch(error => {
-            reject(error)
-          })
-      } else {
-        // use api.jingtum.com to get sequence
-        axios
-          .get(
-            `https://api.jingtum.com/v2/accounts/${
-              this.tx_json.Account
-            }/balances`
-          )
-          .then(response => {
-            this.tx_json.Sequence = response.data.sequence
-            signing(this, (error, blob) => {
-              if (error) {
-                reject(error)
-              } else {
-                resolve(blob)
-              }
-            })
-          })
-          .catch(error => {
-            reject(error)
-          })
+  public async signPromise(secret = "", sequence = 0) {
+    if (!this.tx_json) {
+      return Promise.reject("a valid transaction is expected")
+    } else if ("blob" in this.tx_json) {
+      return Promise.resolve(this.tx_json.blob)
+    } else {
+      for (const key in this.tx_json) {
+        if (this.tx_json[key] instanceof Error) {
+          return Promise.reject(this.tx_json[key].message)
+        }
       }
-    })
+      if (!this._secret) {
+        if (!secret) {
+          return Promise.reject("a valid secret is needed to sign with")
+        } else {
+          this._secret = secret
+        }
+      } // has _secret now
+      if (!this.tx_json.Sequence) {
+        try {
+          if (sequence) {
+            this.setSequence(sequence)
+          } else {
+            await this._setSequencePromise()
+          }
+          await this._signPromise()
+          return Promise.resolve(this.tx_json.blob)
+        } catch (error) {
+          return Promise.reject(error)
+        }
+      } // has tx_json.Sequence now
+      try {
+        await this._signPromise()
+        return Promise.resolve(this.tx_json.blob)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    }
   }
 
   /**
@@ -925,33 +877,30 @@ class Transaction {
     }
   }
 
-  public async submitPromise() {
+  public async submitPromise(secret = "", sequence = 0) {
     for (const key in this.tx_json) {
       if (this.tx_json[key] instanceof Error) {
         return Promise.reject(this.tx_json[key].message)
       }
     }
-    let blob
-    if (!("blob" in this.tx_json)) {
-      blob = await this.signPromise()
-    } else {
-      blob = this.tx_json.blob
-    }
-    const data = {
-      blob
-    }
-    if ("submitPromise" in this._remote) {
-      // lib remote
-      return this._remote.submitPromise(this)
-    } else if ("postBlob" in this._remote) {
-      // api remote
-      return this._remote.postBlob(data)
-    } else if ("_axios" in this._remote) {
-      // api remote
-      return this._remote._axios.post(`blob`, data)
-    } else {
-      // use api.jingtum.com directly
-      return axios.post(`https://api.jingtum.com/v2/blob`, data)
+    try {
+      const blob = await this.signPromise(secret, sequence)
+      const data = { blob }
+      if ("submitPromise" in this._remote) {
+        // lib remote
+        return this._remote.submitPromise(this)
+      } else if ("txSubmitPromise" in this._remote) {
+        // api remote
+        return this._remote.txSubmitPromise(this)
+      } else if ("_axios" in this._remote) {
+        // api remote
+        return this._remote._axios.post(`blob`, data)
+      } else {
+        // use api.jingtum.com directly
+        return axios.post(`https://api.jingtum.com/v2/blob`, data)
+      }
+    } catch (error) {
+      return Promise.reject(error)
     }
   }
 
@@ -980,6 +929,92 @@ class Transaction {
       }
     } else {
       return Promise.reject("please local sign before this submit")
+    }
+  }
+
+  // private and protected methods
+  private async _signPromise(): Promise<any> {
+    this.tx_json.Fee = this.tx_json.Fee / 1000000
+    // payment
+    if (
+      this.tx_json.Amount &&
+      JSON.stringify(this.tx_json.Amount).indexOf("{") < 0
+    ) {
+      // 基础货币
+      this.tx_json.Amount = Number(this.tx_json.Amount) / 1000000
+    }
+    if (this.tx_json.Memos) {
+      const memos = this.tx_json.Memos
+      for (const memo of memos) {
+        memo.Memo.MemoData = utf8.decode(utils.hexToString(memo.Memo.MemoData))
+      }
+    }
+    if (this.tx_json.SendMax && typeof this.tx_json.SendMax === "string") {
+      this.tx_json.SendMax = Number(this.tx_json.SendMax) / 1000000
+    }
+    // order
+    if (
+      this.tx_json.TakerPays &&
+      JSON.stringify(this.tx_json.TakerPays).indexOf("{") < 0
+    ) {
+      // 基础货币
+      this.tx_json.TakerPays = Number(this.tx_json.TakerPays) / 1000000
+    }
+    if (
+      this.tx_json.TakerGets &&
+      JSON.stringify(this.tx_json.TakerGets).indexOf("{") < 0
+    ) {
+      // 基础货币
+      this.tx_json.TakerGets = Number(this.tx_json.TakerGets) / 1000000
+    }
+    return new Promise((resolve, reject) => {
+      try {
+        const wt = new baselib(this._secret, this._token)
+        this.tx_json.SigningPubKey = wt.getPublicKey()
+        const prefix = 0x53545800
+        const hash = jser.from_json(this.tx_json).hash(prefix)
+        this.tx_json.TxnSignature = wt.signTx(hash)
+        this.tx_json.blob = jser.from_json(this.tx_json).to_hex()
+        resolve(this)
+      } catch (error) {
+        reject(error)
+      }
+    })
+  }
+
+  private async _setSequencePromise(): Promise<any> {
+    let data: any
+    let response: any
+    try {
+      if ("requestAccountInfo" in this._remote) {
+        data = await this._remote
+          .requestAccountInfo({
+            account: this.tx_json.Account,
+            type: "trust"
+          })
+          .submitPromise()
+        this.tx_json.Sequence = data.account_data.Sequence
+        return Promise.resolve(this)
+      } else if ("getAccountBalances" in this._remote) {
+        data = await this._remote.getAccountBalances(this.tx_json.Account)
+        this.tx_json.Sequence = data.sequence
+        return Promise.resolve(this)
+      } else if ("_axios" in this._remote) {
+        response = await this._remote._axios.get(
+          `accounts/${this.tx_json.Account}/balances`
+        )
+        this.tx_json.Sequence = response.data.sequence
+        return Promise.resolve(this)
+      } else {
+        // use api.jingtum.com to get sequence
+        response = await axios.get(
+          `https://api.jingtum.com/v2/accounts/${this.tx_json.Account}/balances`
+        )
+        this.tx_json.Sequence = response.data.sequence
+        return Promise.resolve(this)
+      }
+    } catch (error) {
+      return Promise.reject(error)
     }
   }
 }
