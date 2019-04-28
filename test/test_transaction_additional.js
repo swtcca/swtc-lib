@@ -17,7 +17,10 @@ describe("test transaction additions", function() {
     let tx = TX.buildPaymentTx({
       source: DATA.address,
       to: DATA.address2,
-      amount: { value: 0.1, currency: "SWT", issuer: "" }
+      amount: { value: 0.1, currency: "SWT", issuer: "" },
+      memo: "memo",
+      secret: DATA.secret,
+      sequence: "100"
     })
     it("if did not provide remote", function() {
       expect(tx._remote).to.deep.equal({})
@@ -39,13 +42,22 @@ describe("test transaction additions", function() {
     it("has tx_json.Fee", function() {
       expect(tx.tx_json.Fee).to.equal(utils.getFee(tx._token))
     })
+    it("has _secret if in options", function() {
+      expect(tx._secret).to.equal(DATA.secret)
+    })
     it("setSecret", function() {
       tx.setSecret(DATA.secret)
       expect(tx._secret).to.equal(DATA.secret)
     })
-    it("setSequence", function() {
-      tx.setSequence(100)
+    it("has tx_json.Sequence if in options", function() {
       expect(tx.tx_json.Sequence).to.equal(100)
+    })
+    it("setSequence", function() {
+      tx.setSequence(101)
+      expect(tx.tx_json.Sequence).to.equal(101)
+    })
+    it("has tx_json.Memos if in options", function() {
+      expect(tx.tx_json.Memos).to.be.an("array")
     })
     it("sign with sequence set", function() {
       let callback = (error, blob) => {
@@ -312,7 +324,7 @@ describe("test transaction additions", function() {
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
-      let blob = await tx.signPromise(DATA.secret, 10)
+      let blob = await tx.signPromise(DATA.secret, "", 10)
       expect(tx.tx_json).to.have.property("Sequence")
       expect(tx.tx_json.Sequence).to.be.a("number")
       expect(tx.tx_json.Sequence).to.be.equal(10)
@@ -392,6 +404,28 @@ describe("test transaction additions", function() {
       expect(result.data).to.have.property("tx_blob")
       expect(tx.tx_json.blob).to.be.equal(result.data.tx_blob)
     })
+    it(".submitPromise() with secret and memo param", async function() {
+      let tx = TX.buildPaymentTx(
+        {
+          source: DATA.address,
+          to: DATA.address2,
+          amount: { value: 0.1, currency: "SWT", issuer: "" }
+        },
+        { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
+      )
+      let result = await tx.submitPromise(DATA.secret, "hello memo")
+      expect(tx.tx_json).to.have.property("Memos")
+      expect(tx.tx_json.Memos).to.be.a("array")
+      expect(tx.tx_json).to.have.property("Sequence")
+      expect(tx.tx_json.Sequence).to.be.a("number")
+      expect(tx.tx_json).to.have.property("blob")
+      expect(result).to.have.property("data")
+      expect(result.data).to.have.property("success")
+      expect(result.data.success).to.be.true
+      expect(result.data).to.have.property("engine_result")
+      expect(result.data).to.have.property("tx_blob")
+      expect(tx.tx_json.blob).to.be.equal(result.data.tx_blob)
+    })
     it(".submitPromise() with secret and sequence param", async function() {
       let tx = TX.buildPaymentTx(
         {
@@ -401,7 +435,7 @@ describe("test transaction additions", function() {
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
-      let result = await tx.submitPromise(DATA.secret, 10)
+      let result = await tx.submitPromise(DATA.secret, "", 10)
       expect(tx.tx_json).to.have.property("Sequence")
       expect(tx.tx_json.Sequence).to.be.a("number")
       expect(tx.tx_json.Sequence).to.be.equal(10)

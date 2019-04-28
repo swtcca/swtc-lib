@@ -96,6 +96,15 @@ class Transaction {
     tx.tx_json.Account = src
     tx.tx_json.Amount = utils.ToAmount(amount)
     tx.tx_json.Destination = dst
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -161,6 +170,15 @@ class Transaction {
     tx.tx_json.TakerPays = utils.ToAmount(taker_pays, remote._token || "swt")
     tx.tx_json.TakerGets = utils.ToAmount(taker_gets, remote._token || "swt")
 
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -194,6 +212,15 @@ class Transaction {
     tx.tx_json.Account = src
     tx.tx_json.OfferSequence = Number(sequence)
 
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -244,6 +271,15 @@ class Transaction {
         Parameter: utils.stringToHex(param)
       }
       tx.tx_json.Args.push(obj)
+    }
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
     }
     return tx
   }
@@ -300,6 +336,15 @@ class Transaction {
         Parameter: utils.stringToHex(param)
       }
       tx.tx_json.Args.push(obj)
+    }
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
     }
     return tx
   }
@@ -428,6 +473,15 @@ class Transaction {
     tx.tx_json.AppType = app // 应用来源(正整数)
     tx.tx_json.Amount = utils.ToAmount(amount) // 币种,这里amount字段中的value值只是占位，没有实际意义
 
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -454,6 +508,15 @@ class Transaction {
     }
     if (quality_out) {
       tx.tx_json.QualityOut = quality_out
+    }
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
     }
     return tx
   }
@@ -482,6 +545,15 @@ class Transaction {
     tx.tx_json.Target = des
     tx.tx_json.RelationType = options.type === "authorize" ? 1 : 3
     tx.tx_json.LimitAmount = limit
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -526,6 +598,15 @@ class Transaction {
       }
     }
 
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -553,6 +634,15 @@ class Transaction {
     tx.tx_json.Account = src
     tx.tx_json.RegularKey = delegate_key
 
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
 
@@ -560,15 +650,24 @@ class Transaction {
     // TODO
     tx.tx_json.delegate_key =
       options.deletegate_key || new Error("not implemented yet")
+    if ("memo" in options && options.memo) {
+      tx.addMemo(options.memo)
+    }
+    if ("secret" in options && options.secret) {
+      tx.setSecret(options.secret)
+    }
+    if ("sequence" in options && options.sequence) {
+      tx.setSequence(options.sequence)
+    }
     return tx
   }
   // end of static transaction builds
 
-  public readonly _token: string
   public tx_json
+  public readonly _token: string
   public _secret: string | undefined
-  public _filter
-  private _remote: any
+  public _remote: any
+  private _filter
   constructor(remote, filter = v => v) {
     this._remote = remote
     this._token = remote._token || "swt"
@@ -688,7 +787,7 @@ class Transaction {
     }
     const path = JSON.parse(item.path)
     this.tx_json.Paths = path
-    const amount = MaxAmount(item.choice)
+    const amount = utils.MaxAmount(item.choice)
     this.tx_json.SendMax = amount
   }
 
@@ -798,7 +897,7 @@ class Transaction {
     }
   }
 
-  public async signPromise(secret = "", sequence = 0) {
+  public async signPromise(secret = "", memo = "", sequence = 0) {
     if (!this.tx_json) {
       return Promise.reject("a valid transaction is expected")
     } else if ("blob" in this.tx_json) {
@@ -809,6 +908,16 @@ class Transaction {
           return Promise.reject(this.tx_json[key].message)
         }
       }
+      try {
+        if (memo) {
+          this.addMemo(memo)
+        }
+        if (sequence) {
+          this.setSequence(sequence)
+        }
+      } catch (error) {
+        return Promise.reject(error)
+      }
       if (!this._secret) {
         if (!secret) {
           return Promise.reject("a valid secret is needed to sign with")
@@ -818,22 +927,20 @@ class Transaction {
       } // has _secret now
       if (!this.tx_json.Sequence) {
         try {
-          if (sequence) {
-            this.setSequence(sequence)
-          } else {
-            await this._setSequencePromise()
-          }
+          await this._setSequencePromise()
           await this._signPromise()
           return Promise.resolve(this.tx_json.blob)
         } catch (error) {
           return Promise.reject(error)
         }
-      } // has tx_json.Sequence now
-      try {
-        await this._signPromise()
-        return Promise.resolve(this.tx_json.blob)
-      } catch (error) {
-        return Promise.reject(error)
+        // has tx_json.Sequence now
+      } else {
+        try {
+          await this._signPromise()
+          return Promise.resolve(this.tx_json.blob)
+        } catch (error) {
+          return Promise.reject(error)
+        }
       }
     }
   }
@@ -877,14 +984,14 @@ class Transaction {
     }
   }
 
-  public async submitPromise(secret = "", sequence = 0) {
+  public async submitPromise(secret = "", memo = "", sequence = 0) {
     for (const key in this.tx_json) {
       if (this.tx_json[key] instanceof Error) {
         return Promise.reject(this.tx_json[key].message)
       }
     }
     try {
-      const blob = await this.signPromise(secret, sequence)
+      const blob = await this.signPromise(secret, memo, sequence)
       const data = { blob }
       if ("submitPromise" in this._remote) {
         // lib remote
@@ -904,32 +1011,8 @@ class Transaction {
     }
   }
 
-  public submitApi() {
-    const self = this
-    for (const key in self.tx_json) {
-      if (self.tx_json[key] instanceof Error) {
-        return Promise.reject(self.tx_json[key].message)
-      }
-    }
-
-    let data = {}
-    if ("blob" in self.tx_json) {
-      data = {
-        blob: self.tx_json.blob
-      }
-      if ("postBlob" in self._remote) {
-        // api remote
-        return self._remote.postBlob(data)
-      } else if ("_axios" in self._remote) {
-        // api remote
-        return self._remote._axios.post(`blob`, data)
-      } else {
-        // use api.jingtum.com directly
-        return axios.post(`https://api.jingtum.com/v2/blob`, data)
-      }
-    } else {
-      return Promise.reject("please local sign before this submit")
-    }
+  public async submitApi(secret = "", memo = "", sequence = 0) {
+    return this.submitPromise(secret, memo, sequence)
   }
 
   // private and protected methods
@@ -1019,18 +1102,6 @@ class Transaction {
   }
 }
 
-function MaxAmount(amount) {
-  if (typeof amount === "string" && Number(amount)) {
-    const _amount = parseInt(String(Number(amount) * 1.0001), 10)
-    return String(_amount)
-  }
-  if (typeof amount === "object" && utils.isValidAmount(amount)) {
-    const _value = Number(amount.value) * 1.0001
-    amount.value = String(_value)
-    return amount
-  }
-  return new Error("invalid amount to max")
-}
 function signing(self, callback) {
   self.tx_json.Fee = self.tx_json.Fee / 1000000
 

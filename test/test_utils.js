@@ -536,4 +536,30 @@ describe("test utils", function() {
       })
     })
   })
+  describe("test MaxAmount", function() {
+    it("return error for number arg", function() {
+      let res = utils.MaxAmount(10000)
+      expect(res).to.be.a("error")
+    })
+    it("return for string amount 10001", function() {
+      let res = utils.MaxAmount("10000")
+      expect(res).to.equal("10001")
+    })
+    it("return for amount {value: 10001, currency: 'SWT', issuer: ''}", function() {
+      let res = utils.MaxAmount({ value: 10000, currency: "SWT", issuer: "" })
+      expect(res).to.deep.equal({ value: "10001", currency: "SWT", issuer: "" })
+    })
+    it("return for amount {value: 10001, currency: 'CNY', issuer: 'jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS'}", function() {
+      let res = utils.MaxAmount({
+        value: 10000,
+        currency: "CNY",
+        issuer: "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+      })
+      expect(res).to.deep.equal({
+        value: "10001",
+        currency: "CNY",
+        issuer: "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+      })
+    })
+  })
 })

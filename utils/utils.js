@@ -784,30 +784,45 @@ function ToAmount(amount, token = "SWT") {
   return amount
 }
 
+function MaxAmount(amount) {
+  if (typeof amount === "string" && Number(amount)) {
+    const _amount = parseInt(String(Number(amount) * 1.0001), 10)
+    return String(_amount)
+  }
+  if (typeof amount === "object" && isValidAmount(amount)) {
+    const _value = Number(amount.value) * 1.0001
+    amount.value = String(_value)
+    return amount
+  }
+  return new Error("invalid amount to max")
+}
+
 module.exports = {
-  hexToString: hexToString,
-  stringToHex: stringToHex,
-  isValidAmount: isValidAmount,
-  isValidAmount0: isValidAmount0,
-  parseAmount: parseAmount,
-  isValidCurrency: isValidCurrency,
-  isValidHash: isValidHash,
+  hexToString,
+  stringToHex,
+  isValidAmount,
+  isValidAmount0,
+  parseAmount,
+  isValidCurrency,
+  isValidHash,
   isValidAddress: baselib.isValidAddress,
   isValidSecret: baselib.isValidSecret,
-  affectedAccounts: affectedAccounts,
-  affectedBooks: affectedBooks,
-  processTx: processTx,
-  LEDGER_STATES: LEDGER_STATES,
+  affectedAccounts,
+  affectedBooks,
+  processTx,
+  LEDGER_STATES,
   ACCOUNT_ZERO: getAccountZero(),
   ACCOUNT_ONE: getAccountOne(),
-  arraySet: arraySet,
+  arraySet,
   // for jcc
-  getChains: getChains,
-  getCurrency: getCurrency,
-  getFee: getFee,
-  getAccountZero: getAccountZero,
-  getAccountOne: getAccountOne,
-  parseKey: parseKey,
+  getChains,
+  getCurrency,
+  getFee,
+  getAccountZero,
+  getAccountOne,
+  parseKey,
   // from remote
-  ToAmount: ToAmount
+  ToAmount,
+  // from transaction
+  MaxAmount
 }
