@@ -219,7 +219,8 @@ class Transaction {
       tx.setSecret(options.secret)
     }
     if ("sequence" in options && options.sequence) {
-      tx.setSequence(options.sequence)
+      // tx.setSequence(options.sequence)
+      // sequence is parameter for OfferSequence
     }
     return tx
   }
@@ -958,13 +959,13 @@ class Transaction {
     }
 
     let data = {}
-    if (self.tx_json.TransactionType === "Signer") {
+    if ("blob" in self.tx_json) {
       // 直接将blob传给底层
       data = {
         tx_blob: self.tx_json.blob
       }
       self._remote._submit("submit", data, self._filter, callback)
-    } else if (self._remote._local_sign) {
+    } else {
       // 签名之后传给底层
       self.sign((err, blob) => {
         if (err) {
@@ -974,13 +975,6 @@ class Transaction {
           self._remote._submit("submit", data, self._filter, callback)
         }
       })
-    } else {
-      // 不签名交易传给底层
-      data = {
-        secret: self._secret,
-        tx_json: self.tx_json
-      }
-      self._remote._submit("submit", data, self._filter, callback)
     }
   }
 

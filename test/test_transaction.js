@@ -837,7 +837,7 @@ describe("test Transaction", function() {
       expect(args[1].tx_blob).to.be.a("string")
     })
 
-    it("if is not local_sign and signer", function() {
+    xit("if is not local_sign and signer", function() {
       let remote = new Remote({
         server: JT_NODE,
         local_sign: false
