@@ -987,9 +987,23 @@ class Transaction {
     try {
       const blob = await this.signPromise(secret, memo, sequence)
       const data = { blob }
-      if ("submitPromise" in this._remote) {
+      if ("_submit" in this._remote) {
         // lib remote
-        return this._remote.submitPromise(this)
+        return new Promise((resolve, reject) => {
+          const callback = (error, result) => {
+            if (error) {
+              reject(error)
+            } else {
+              resolve(result)
+            }
+          }
+          this._remote._submit(
+            "submit",
+            { tx_blob: blob },
+            this._filter,
+            callback
+          )
+        })
       } else if ("txSubmitPromise" in this._remote) {
         // api remote
         return this._remote.txSubmitPromise(this)
