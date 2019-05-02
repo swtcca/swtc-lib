@@ -9,7 +9,7 @@ var utf8 = require("utf8")
 const SWTCCHAINS = require("swtc-chains")
 var Bignumber = require("bignumber.js")
 
-function Factory(Wallet=WalletFactory()) {
+function Factory(Wallet = WalletFactory()) {
   if (!Wallet.hasOwnProperty("KeyPair")) {
     throw Error("utils needs a Wallet class")
   }
