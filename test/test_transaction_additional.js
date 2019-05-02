@@ -5,7 +5,7 @@ const TX = require("../").Transaction
 const config = require("./config")
 const DATA = require("./config_data")
 const sinon = require("sinon")
-const utils = require("swtc-utils")
+const utils = require("swtc-utils").utils
 const axios = require("axios")
 const sleep = time => new Promise(res => setTimeout(() => res(), time))
 let { JT_NODE } = config

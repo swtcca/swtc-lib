@@ -1,7 +1,6 @@
 "use strict"
 
-import { Wallet } from "swtc-factory"
-import { OrderBook } from "./orderbook"
-import { Transaction } from "./transaction"
+import { Factory } from "./transaction"
+const Transaction = Factory()
 
-export { Transaction, OrderBook, Wallet }
+export { Factory, Transaction }

@@ -9,19 +9,11 @@ var utf8 = require("utf8")
 const SWTCCHAINS = require("swtc-chains")
 var Bignumber = require("bignumber.js")
 
-var getChain = function(chain_or_token = "jingtum") {
-  return SWTCCHAINS.filter(
-    chain =>
-      chain.code.toLowerCase === chain_or_token.toLowerCase() ||
-      chain.currency.toLowerCase() === chain_or_token.toLowerCase()
-  )
-}
-function Factory(token_or_chain = "jingtum") {
-  const chain = getChain(token_or_chain)
-  if (!chain) {
-    throw Error("token or chain not supported")
+function Factory(Wallet=WalletFactory()) {
+  if (!Wallet.hasOwnProperty("KeyPair")) {
+    throw Error("utils needs a Wallet class")
   }
-  const baselib = WalletFactory(chain.code)
+  const baselib = Wallet
 
   // from jcc
   var getChains = function(chain_or_token = "SWT") {
