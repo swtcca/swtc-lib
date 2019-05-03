@@ -13,7 +13,6 @@ function Factory(Wallet = WalletFactory()) {
   if (!Wallet.hasOwnProperty("KeyPair")) {
     throw Error("utils needs a Wallet class")
   }
-  const baselib = Wallet
 
   // from jcc
   var getChains = function(chain_or_token = "SWT") {
@@ -24,37 +23,17 @@ function Factory(Wallet = WalletFactory()) {
     )
   }
 
-  var getCurrency = function(token = "SWT") {
-    let chains = getChains(token)
-    if (chains.length > 0) {
-      return chains[0].currency.toUpperCase()
-    }
-    return "SWT"
-  }
+  var getCurrency = Wallet.getCurrency
 
-  var getFee = function(token = "SWT") {
-    let chains = getChains(token)
-    if (chains.length > 0) {
-      return chains[0].fee || 10000
-    }
-    return 10000
-  }
+  var getFee = Wallet.getFee
 
-  var getAccountZero = function(token = "SWT") {
-    let chains = getChains(token)
-    if (chains.length > 0) {
-      return chains[0].ACCOUNT_ZERO || "jjjjjjjjjjjjjjjjjjjjjhoLvTp"
-    }
-    return "jjjjjjjjjjjjjjjjjjjjjhoLvTp"
-  }
+  var getAccountZero = Wallet.getAccountZero
 
-  var getAccountOne = function(token = "SWT") {
-    let chains = getChains(token)
-    if (chains.length > 0) {
-      return chains[0].ACCOUNT_ONE || "jjjjjjjjjjjjjjjjjjjjBZbvri"
-    }
-    return "jjjjjjjjjjjjjjjjjjjjBZbvri"
-  }
+  var getAccountOne = Wallet.getAccountOne
+
+  var makeCurrency = Wallet.makeCurrency
+
+  var makeAmount = Wallet.makeAmount
 
   // Flags for ledger entries
   var LEDGER_FLAGS = {
@@ -124,7 +103,6 @@ function Factory(Wallet = WalletFactory()) {
    * @returns {boolean}
    */
   function isValidAmount(amount, token = "SWT") {
-    // var baselib = require("swtc-factory").Wallet
     if (amount === null || typeof amount !== "object") {
       return false
     }
@@ -145,10 +123,7 @@ function Factory(Wallet = WalletFactory()) {
       return false
     }
     // non native currency issuer is not allowed to be empty
-    if (
-      amount.currency !== currency &&
-      !baselib.isValidAddress(amount.issuer)
-    ) {
+    if (amount.currency !== currency && !Wallet.isValidAddress(amount.issuer)) {
       return false
     }
     return true
@@ -173,10 +148,7 @@ function Factory(Wallet = WalletFactory()) {
       return false
     }
     // non native currency issuer is not allowed to be empty
-    if (
-      amount.currency !== currency &&
-      !baselib.isValidAddress(amount.issuer)
-    ) {
+    if (amount.currency !== currency && !Wallet.isValidAddress(amount.issuer)) {
       return false
     }
     return true
@@ -768,7 +740,7 @@ function Factory(Wallet = WalletFactory()) {
       var _parts = part.split("/")
       if (_parts.length !== 2) return null
       if (!isValidCurrency(_parts[0])) return null
-      if (!baselib.isValidAddress(_parts[1], currency)) return null
+      if (!Wallet.isValidAddress(_parts[1], currency)) return null
       return {
         currency: _parts[0],
         issuer: _parts[1]
@@ -824,14 +796,14 @@ function Factory(Wallet = WalletFactory()) {
     parseAmount,
     isValidCurrency,
     isValidHash,
-    isValidAddress: baselib.isValidAddress,
-    isValidSecret: baselib.isValidSecret,
+    isValidAddress: Wallet.isValidAddress,
+    isValidSecret: Wallet.isValidSecret,
     affectedAccounts,
     affectedBooks,
     processTx,
     LEDGER_STATES,
-    ACCOUNT_ZERO: getAccountZero(),
-    ACCOUNT_ONE: getAccountOne(),
+    ACCOUNT_ZERO: Wallet.getAccountZero(),
+    ACCOUNT_ONE: Wallet.getAccountOne(),
     arraySet,
     // for jcc
     getChains,
@@ -843,7 +815,10 @@ function Factory(Wallet = WalletFactory()) {
     // from remote
     ToAmount,
     // from transaction
-    MaxAmount
+    MaxAmount,
+    // toolset
+    makeCurrency,
+    makeAmount
   }
 }
 module.exports = { Factory, utils: Factory() }

@@ -28,25 +28,6 @@ describe("test Transaction", function() {
       expect(inst._secret).to.equal(undefined)
       expect(inst._filter("a")).to.equal("a")
     })
-
-    it("constructor: _token is bwt", function() {
-      let remote = new Remote({
-        server: JT_NODE,
-        local_sign: true,
-        token: "bwt"
-      })
-      let inst = new Transaction(remote)
-      expect(inst._token).to.equal("bwt")
-      expect(inst._remote instanceof Remote).to.equal(true)
-      expect(inst.tx_json).to.deep.equal({
-        Flags: 0,
-        Fee: 10
-      })
-      expect(inst._filter instanceof Function).to.equal(true)
-      // expect(inst instanceof Event).to.equal(true)
-      expect(inst._secret).to.equal(undefined)
-      expect(inst._filter("a")).to.equal("a")
-    })
   })
 
   describe("test parseJson", function() {

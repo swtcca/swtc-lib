@@ -3,6 +3,8 @@ const expect = chai.expect
 const config = require("./config")
 const { testAddress, testCreateHash } = config
 let utils = require("../utils/utils").utils
+let Wallet_BWT = require("swtc-wallet").Factory("bwt")
+let utils_bwt = require("../utils/utils").Factory(Wallet_BWT)
 let txData = require("./tx_data")
 describe("test utils", function() {
   describe("test hexToString", function() {
@@ -237,64 +239,44 @@ describe("test utils", function() {
   })
 
   describe("test getCurrency", function() {
-    it("return default value if the config is empty", function() {
-      let currency = utils.getCurrency("moac")
-      expect(currency).to.equal("SWT")
-    })
-
     it("return SWT if the token is swt", function() {
       let currency = utils.getCurrency("swt")
       expect(currency).to.equal("SWT")
     })
 
     it("return BWT if the token is bwt", function() {
-      let currency = utils.getCurrency("bwt")
+      let currency = utils_bwt.getCurrency("bwt")
       expect(currency).to.equal("BWT")
     })
   })
 
   describe("test getFee", function() {
-    it("return default value if the config is empty", function() {
-      let fee = utils.getFee("moac")
-      expect(fee).to.equal(10000)
-    })
-
     it("return 10 if the token is bwt", function() {
-      let fee = utils.getFee("bwt")
+      let fee = utils_bwt.getFee()
       expect(fee).to.equal(10)
     })
 
     it("return 10000 if the token is swt", function() {
-      let fee = utils.getFee("swt")
+      let fee = utils.getFee()
       expect(fee).to.equal(10000)
     })
   })
 
   describe("test getAccountZero", function() {
-    it("return default value if the config is empty", function() {
-      let fee = utils.getAccountZero("moac")
-      expect(fee).to.equal("jjjjjjjjjjjjjjjjjjjjjhoLvTp")
-    })
-
     it("return bbbbbbbbbbbbbbbbbbbbbhoLvTp if the token is bwt", function() {
-      let fee = utils.getAccountZero("bwt")
+      let fee = utils_bwt.getAccountZero()
       expect(fee).to.equal("bbbbbbbbbbbbbbbbbbbbbhoLvTp")
     })
 
     it("return jjjjjjjjjjjjjjjjjjjjjhoLvTp if the token is swt", function() {
-      let fee = utils.getAccountZero("swt")
+      let fee = utils.getAccountZero()
       expect(fee).to.equal("jjjjjjjjjjjjjjjjjjjjjhoLvTp")
     })
   })
 
   describe("test getAccountOne", function() {
-    it("return default value if the config is empty", function() {
-      let fee = utils.getAccountOne("moac")
-      expect(fee).to.equal("jjjjjjjjjjjjjjjjjjjjBZbvri")
-    })
-
     it("return bbbbbbbbbbbbbbbbbbbbBZjvri if the token is bwt", function() {
-      let fee = utils.getAccountOne("bwt")
+      let fee = utils_bwt.getAccountOne("bwt")
       expect(fee).to.equal("bbbbbbbbbbbbbbbbbbbbBZjvri")
     })
 
