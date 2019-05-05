@@ -19,11 +19,11 @@
     "tslint": "tslint tssrc/*.ts",
     "gulp": "gulp dev",
     "gulp:production": "gulp production",
-    "build": "webpack",
-    "build:production": "webpack --config prod.webpack.config",
+    "build": "tsc; webpack",
+    "build:production": "tsc; webpack --config prod.webpack.config",
     "dev": "webpack-dev-server",
-    "test": "mocha \"test/test*.js\"",
-    "test:extended": "mocha \"test/*.js\"",
+    "test": "tsc; mocha \"test/test*.js\"",
+    "test:extended": "tsc; mocha \"test/*.js\"",
     "test:nyc": "nyc --reporter=html --reporter=text mocha test/test*.js"
   },
   "repository": {
