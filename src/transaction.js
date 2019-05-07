@@ -115,7 +115,7 @@ Transaction.prototype.getTransactionType = function() {
  */
 Transaction.prototype.setSecret = function(secret) {
   if (!baselib.isValidSecret(secret)) {
-    this.tx_json._secret = new Error("valid secret")
+    this.tx_json._secret = new Error("invalid secret")
     return
   }
   this._secret = secret
@@ -221,7 +221,7 @@ function MaxAmount(amount) {
  */
 Transaction.prototype.setPath = function(key) {
   // sha1 string
-  if (typeof key !== "string" && key.length !== 40) {
+  if (typeof key !== "string" || key.length !== 40) {
     return new Error("invalid path key")
   }
   var item = this._remote._paths.get(key)

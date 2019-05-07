@@ -17,13 +17,15 @@ function Server(remote, opts) {
 
   if (typeof opts === "string") {
     var parsed = url.parse(opts)
+    var secure = parsed.protocol === "wss:"
     opts = {
       host: parsed.hostname,
-      port: parsed.port,
-      secure: parsed.protocol === "wss:" ? true : false
+      port: parsed.port ? Number(parsed.port) : secure ? 443 : 80,
+      secure: secure,
+      path: parsed.path
     }
   }
-  if (typeof opts !== "object") {
+  if (opts === null || typeof opts !== "object") {
     this.opts = new TypeError("server options not supplied")
     return this
   }
@@ -31,7 +33,7 @@ function Server(remote, opts) {
     this.opts_host = new TypeError("server host incorrect")
     return this
   }
-  if (!(opts.port = Number(opts.port))) {
+  if (Number.isNaN(opts.port) || !Number.isFinite(opts.port)) {
     this.port = new TypeError("server port not a number")
     return this
   }
@@ -47,7 +49,8 @@ function Server(remote, opts) {
     (this._opts.secure ? "wss://" : "ws://") +
     this._opts.host +
     ":" +
-    this._opts.port
+    this._opts.port +
+    (this._opts.path ? this._opts.path : "")
   this._remote = remote
 
   this._ws = null
@@ -101,6 +104,7 @@ Server.prototype.connect = function(callback) {
  */
 Server.prototype.disconnect = function() {
   this._ws.close()
+  this._ws = null
   this._setState("offline")
 }
 
