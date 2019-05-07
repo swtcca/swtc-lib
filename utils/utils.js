@@ -814,6 +814,26 @@ function Factory(Wallet = WalletFactory()) {
     return new Error("invalid amount to max")
   }
 
+  function getTypes(abi, foo) {
+    try {
+      let filtered = abi
+        .filter(function(json) {
+          return json.name === foo
+        })
+        .map(function(json) {
+          return json.outputs.map(function(input) {
+            return input.type
+          })
+        })
+        .map(function(types) {
+          return types
+        })
+      return filtered ? filtered[0] : []
+    } catch (error) {
+      return []
+    }
+  }
+
   return {
     hexToString,
     stringToHex,
@@ -846,6 +866,7 @@ function Factory(Wallet = WalletFactory()) {
     string2Hex,
     number2Hex,
     hex2Number,
+    getTypes,
     // toolset
     makeCurrency,
     makeAmount
