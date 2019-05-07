@@ -1,67 +1,37 @@
 {
-  "_from": "jingtum-lib",
-  "_id": "jingtum-lib@1.4.2",
-  "_inBundle": false,
-  "_integrity": "sha512-x/3BNnBmjJbPFt3RCnvd/WlUx134u8XAUyczSmUM2g5O2fuKPh5IveaaO5dIqOZqN7CghpNTJ63TVVHqOcGSZA==",
-  "_location": "/jingtum-lib",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "jingtum-lib",
-    "name": "jingtum-lib",
-    "escapedName": "jingtum-lib",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/jingtum-lib/-/jingtum-lib-1.4.2.tgz",
-  "_shasum": "278c747d4df5aac6085cbfe85575571acfef3ab3",
-  "_spec": "jingtum-lib",
-  "_where": "/private/tmp/tt",
-  "author": {
-    "name": "jingtum inc."
-  },
-  "bundleDependencies": false,
-  "dependencies": {
-    "bignumber.js": "^5.0.0",
-    "bn-plus.js": "^1.0.0",
-    "extend": "^3.0.0",
-    "jingtum-base-lib": "^1.0.9",
-    "lodash": "^4.17.2",
-    "lru-cache": "^4.0.1",
-    "sha1": "^1.1.1",
-    "url": "^0.11.0",
-    "utf8": "^2.1.2",
-    "ws": "^1.1.1"
-  },
-  "deprecated": false,
-  "description": "jingtum lib",
-  "devDependencies": {
-    "chai": "^3.5.0"
-  },
-  "directories": {
-    "lib": "lib",
-    "test": "test"
-  },
-  "keywords": [
-    "jingtum",
-    "blockchain",
-    "lib"
-  ],
-  "license": "Apache-2.0",
+  "name": "swtc-lib",
+  "version": "1.4.2",
+  "description": "Basic js lib to be used for interacting with jingtum blockchain network. - Keep only one websocket connecttion to jingtum and handle exception - Do transaction to jingtumd, and process response - Subscribe events, include server, ledger, account and so on - Get other information from jingtum",
   "main": "index.js",
-  "name": "jingtum-lib",
-  "repository": {
-    "type": "git",
-    "url": "http://git.jingtum.com/root/jingtum-lib.git"
+  "directories": {
+    "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"track jingtum lib\""
+    "prettier": "prettier",
+    "pretty-quick": "pretty-quick",
+    "prettier:check": "prettier -c src/*.js srcbase/*js lib/*js",
+    "prettier:tabs": "prettier --use-tabs --write src/*.js srcbase/*js lib/*js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "version": "1.4.2"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/swtcca/swtc-lib.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/swtcca/swtc-lib/issues"
+  },
+  "homepage": "https://github.com/swtcca/swtc-lib#readme",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged --no-restage --verbose --bail"
+    }
+  },
+  "devDependencies": {
+    "husky": "^2.2.0",
+    "prettier": "^1.17.0",
+    "pretty-quick": "^1.10.0"
+  }
 }
