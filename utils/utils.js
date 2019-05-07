@@ -97,6 +97,27 @@ function Factory(Wallet = WalletFactory()) {
     return result
   }
 
+  function string2Hex(s) {
+    var zero =
+      "0000000000000000000000000000000000000000000000000000000000000000"
+    var result = ""
+    for (var i = 0; i < s.length; i++) {
+      var b = s.charCodeAt(i)
+      result += b < 16 ? "0" + b.toString(16) : b.toString(16)
+    }
+    if (result.length < 64) result += zero.substr(result.length)
+    return result
+  }
+  function number2Hex(n) {
+    n = n.toString(16)
+    var zero =
+      "0000000000000000000000000000000000000000000000000000000000000000"
+    return zero.substr(0, 64 - n.length) + n
+  }
+  function hex2Number(h) {
+    return parseInt(h, 16)
+  }
+
   /**
    * check {value: '', currency:'', issuer: ''}
    * @param amount
@@ -534,7 +555,7 @@ function Factory(Wallet = WalletFactory()) {
       /**
        * TODO now only get offer related effects, need to process other entry type
        */
-      if (node.entryType === "Offer") {
+      if (node && node.entryType === "Offer") {
         // for new and cancelled offers
         var fieldSet = node.fields
         var sell = node.fields.Flags & LEDGER_FLAGS.offer.Sell
@@ -631,8 +652,9 @@ function Factory(Wallet = WalletFactory()) {
             }
           }
           effect.seq = node.fields.Sequence
-        } else if (tx.Account === account && !_.isEmpty(node.fieldsPrev)) {
-          // 5. offer_bought
+        }
+        // 5. offer_bought
+        else if (tx.Account === account && !_.isEmpty(node.fieldsPrev)) {
           effect.effect = "offer_bought"
           effect.counterparty = {
             account: node.fields.Account,
@@ -668,7 +690,11 @@ function Factory(Wallet = WalletFactory()) {
           )
         }
       }
-      if (result.type === "offereffect" && node.entryType === "AccountRoot") {
+      if (
+        result.type === "offereffect" &&
+        node &&
+        node.entryType === "AccountRoot"
+      ) {
         if (node.fields.RegularKey === account) {
           effect.effect = "set_regular_key"
           effect.type = "null"
@@ -676,7 +702,7 @@ function Factory(Wallet = WalletFactory()) {
           effect.regularkey = account
         }
       }
-      if (node.entryType === "Brokerage") {
+      if (node && node.entryType === "Brokerage") {
         result.rate = new Bignumber(parseInt(node.fields.OfferFeeRateNum, 16))
           .div(parseInt(node.fields.OfferFeeRateDen, 16))
           .toNumber()
@@ -816,6 +842,10 @@ function Factory(Wallet = WalletFactory()) {
     ToAmount,
     // from transaction
     MaxAmount,
+    // from contract
+    string2Hex,
+    number2Hex,
+    hex2Number,
     // toolset
     makeCurrency,
     makeAmount

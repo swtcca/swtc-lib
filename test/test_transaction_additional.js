@@ -370,7 +370,7 @@ describe("test transaction additions", function() {
         {
           source: DATA.address,
           to: DATA.address2,
-          amount: { value: 0.1, currency: "SWT", issuer: "" }
+          amount: { value: 1.9999099, currency: "SWT", issuer: "" }
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
@@ -390,7 +390,7 @@ describe("test transaction additions", function() {
         {
           source: DATA.address,
           to: DATA.address2,
-          amount: { value: 0.1, currency: "SWT", issuer: "" }
+          amount: { value: 0.99999099, currency: "SWT", issuer: "" }
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
@@ -409,7 +409,7 @@ describe("test transaction additions", function() {
         {
           source: DATA.address,
           to: DATA.address2,
-          amount: { value: 0.1, currency: "SWT", issuer: "" }
+          amount: { value: 1.999999, currency: "SWT", issuer: "" }
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
@@ -431,7 +431,7 @@ describe("test transaction additions", function() {
         {
           source: DATA.address,
           to: DATA.address2,
-          amount: { value: 0.1, currency: "SWT", issuer: "" }
+          amount: { value: 0.99999999, currency: "SWT", issuer: "" }
         },
         { _axios: axios.create({ baseURL: `${DATA.server}/v2/` }) }
       )
