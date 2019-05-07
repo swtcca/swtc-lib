@@ -1,3 +1,4 @@
+import { Wallet } from "swtc-wallet"
 import { Account } from "./account"
 import { EventEmitter } from "events"
 import { OrderBook } from "./orderbook"
@@ -37,6 +38,7 @@ class Remote extends EventEmitter {
   public type
   protected _local_sign
   protected _token
+  protected _issuer
   private _url
   private _server
   private _status
@@ -58,6 +60,7 @@ class Remote extends EventEmitter {
     }
     this._requests = {}
     this._token = options.token || "swt"
+    this._issuer = options.issuer || "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or"
     this._cache = LRU({
       max: 100,
       maxAge: 1000 * 60 * 5
@@ -93,8 +96,17 @@ class Remote extends EventEmitter {
     return {
       _local_sign: this._local_sign,
       _server: this._server,
-      _token: this._token
+      _token: this._token,
+      _issuer: this._issuer
     }
+  }
+
+  // makeCurrency and makeAmount
+  public makeCurrency(currency = this._token, issuer = this._issuer) {
+    return Wallet.makeCurrency(currency, issuer)
+  }
+  public makeAmount(value = 1, currency = this._token, issuer = this._issuer) {
+    return Wallet.makeAmount(value, currency, issuer)
   }
 
   /**

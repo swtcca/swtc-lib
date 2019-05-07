@@ -9,6 +9,49 @@ const sleep = time => new Promise(res => setTimeout(() => res(), time))
 let { JT_NODE } = config
 let pair = "SWT:JJCC/jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or"
 
+describe("test remote methods", function() {
+  const remote = new Remote({ server: DATA.TEST_NODE })
+  describe("test makeCurrency", function() {
+    it("default to SWT", function() {
+      expect(remote.makeCurrency().currency).to.be.equal("SWT")
+      expect(remote.makeCurrency().issuer).to.be.equal("")
+    })
+    it("vcc as param", function() {
+      expect(remote.makeCurrency("vcc").currency).to.be.equal("VCC")
+      expect(remote.makeCurrency("VCC").issuer).to.be.equal(remote._issuer)
+    })
+    it("vcc and issuer as param", function() {
+      expect(remote.makeCurrency("vcc", DATA.issuer).currency).to.be.equal(
+        "VCC"
+      )
+      expect(remote.makeCurrency("VCC", DATA.issuer).issuer).to.be.equal(
+        DATA.issuer
+      )
+    })
+  })
+  describe("test makeAmount", function() {
+    it("default to 1 SWT", function() {
+      expect(remote.makeAmount().value).to.be.equal(1)
+      expect(remote.makeAmount().currency).to.be.equal("SWT")
+      expect(remote.makeAmount().issuer).to.be.equal("")
+    })
+    it("2 vcc as param", function() {
+      expect(remote.makeAmount(2, "vcc").value).to.be.equal(2)
+      expect(remote.makeAmount(2, "vcc").currency).to.be.equal("VCC")
+      expect(remote.makeAmount(2, "VCC").issuer).to.be.equal(remote._issuer)
+    })
+    it("2 vcc issuer as param", function() {
+      expect(remote.makeAmount(2, "vcc", DATA.issuer).value).to.be.equal(2)
+      expect(remote.makeAmount(2, "vcc", DATA.issuer).currency).to.be.equal(
+        "VCC"
+      )
+      expect(remote.makeAmount(2, "VCC", DATA.issuer).issuer).to.be.equal(
+        DATA.issuer
+      )
+    })
+  })
+})
+
 describe("test transaction additions", function() {
   const remote = new Remote({ server: DATA.TEST_NODE })
   describe("test build payment transaction", async function() {
@@ -158,7 +201,7 @@ describe("test transaction additions", function() {
     })
   })
   describe("test .submitPromise()", function() {
-    this.timeout(15000)
+    this.timeout(20000)
     it(".submitPromise()", async function() {
       let tx = remote.buildPaymentTx(
         {
@@ -168,7 +211,7 @@ describe("test transaction additions", function() {
         },
         remote
       )
-      await sleep(11000)
+      await sleep(15000)
       let result = await tx.submitPromise(DATA.secret)
       expect(tx.tx_json).to.have.property("Sequence")
       expect(tx.tx_json.Sequence).to.be.a("number")
@@ -184,7 +227,7 @@ describe("test transaction additions", function() {
         to: DATA.address2,
         amount: { value: 0.1, currency: "SWT", issuer: "" }
       })
-      await sleep(13000)
+      await sleep(15000)
       let result = await tx.submitPromise(DATA.secret)
       expect(tx.tx_json).to.have.property("Sequence")
       expect(tx.tx_json.Sequence).to.be.a("number")
@@ -202,7 +245,7 @@ describe("test transaction additions", function() {
         },
         remote
       )
-      await sleep(11000)
+      await sleep(15000)
       let result = await tx.submitPromise(DATA.secret, "hello memo")
       expect(tx.tx_json).to.have.property("Memos")
       expect(tx.tx_json.Memos).to.be.a("array")
