@@ -242,6 +242,133 @@ function Factory(Wallet = WalletFactory("jingtum")) {
      *    payload, required
      * @returns {Transaction}
      */
+    public static initContractTx(options, remote: any = {}) {
+      const tx = new Transaction(remote)
+      if (options === null || typeof options !== "object") {
+        tx.tx_json.obj = new Error("invalid options type")
+        return tx
+      }
+      if (remote._solidity) {
+        const account = options.account
+        const amount = options.amount
+        const payload = options.payload
+        const params = options.params || []
+        const abi = options.abi
+        if (!utils.isValidAddress(account)) {
+          tx.tx_json.account = new Error("invalid address")
+          return tx
+        }
+        if (isNaN(amount)) {
+          tx.tx_json.amount = new Error("invalid amount")
+          return tx
+        }
+        if (typeof payload !== "string") {
+          tx.tx_json.payload = new Error("invalid payload: type error.")
+          return tx
+        }
+        if (!Array.isArray(params)) {
+          tx.tx_json.params = new Error("invalid params: type error.")
+          return tx
+        }
+        if (!abi) {
+          tx.tx_json.abi = new Error("not found abi")
+          return tx
+        }
+        if (!Array.isArray(abi)) {
+          tx.tx_json.params = new Error("invalid abi: type error.")
+          return tx
+        }
+
+        const tum3 = new remote.Tum3()
+        tum3.mc.defaultAccount = account
+        const MyContract = tum3.mc.contract(abi)
+        const contractData = MyContract.new.getData.apply(
+          null,
+          params.concat({ data: payload })
+        )
+
+        tx.tx_json.TransactionType = "AlethContract"
+        tx.tx_json.Account = account
+        tx.tx_json.Amount = Number(amount) * 1000000
+        tx.tx_json.Method = 0
+        tx.tx_json.Payload = utils.stringToHex(contractData)
+        return tx
+      } else {
+        throw new Error("initialize your remote for solidity first")
+      }
+    }
+    public static invokeContractTx(options, remote: any = {}) {
+      const tx = new Transaction(remote)
+      if (options === null || typeof options !== "object") {
+        tx.tx_json.obj = new Error("invalid options type")
+        return tx
+      }
+      if (remote._solidity) {
+        const account = options.account
+        const des = options.destination
+        const func = options.func // 函数名及函数参数
+        const abi = options.abi
+
+        if (!utils.isValidAddress(account)) {
+          tx.tx_json.account = new Error("invalid address")
+          return tx
+        }
+        if (!utils.isValidAddress(des)) {
+          tx.tx_json.des = new Error("invalid destination")
+          return tx
+        }
+        if (
+          typeof func !== "string" ||
+          func.indexOf("(") < 0 ||
+          func.indexOf(")") < 0
+        ) {
+          tx.tx_json.func = new Error("invalid func, func must be string")
+          return tx
+        }
+        if (!abi) {
+          tx.tx_json.abi = new Error("not found abi")
+          return tx
+        }
+        if (!Array.isArray(abi)) {
+          tx.tx_json.params = new Error("invalid abi: type error.")
+          return tx
+        }
+        // remote or tx ?
+        remote.fun = func.substring(0, func.indexOf("("))
+
+        const tum3 = new remote.Tum3()
+        tum3.mc.defaultAccount = account
+        const MyContract = tum3.mc.contract(abi)
+        remote.abi = abi
+        const myContractInstance = MyContract.at(des) // initiate contract for an address
+        // try {
+        const result = eval(`${myContractInstance}.${func}`) // call constant function
+        // }catch (e){
+        //     tx.tx_json.foo = new Error('invalid foo, not found this function.' + e);
+        //     return tx;
+        // }
+
+        if (!result) {
+          tx.tx_json.des = new Error("invalid func, no result")
+          return tx
+        }
+        tx.tx_json.TransactionType = "AlethContract"
+        tx.tx_json.Account = account
+        tx.tx_json.Method = 1
+        tx.tx_json.Destination = des
+        tx.tx_json.Args = []
+        tx.tx_json.Args.push({
+          Arg: {
+            Parameter: utils.stringToHex(result.substr(2, result.length)),
+            ContractParamsType: 0
+          }
+        })
+        return tx
+      } else {
+        throw new Error("initialize your remote for solidity first")
+      }
+    }
+
     public static deployContractTx(options, remote: any = {}) {
       const tx = new Transaction(remote)
       if (options === null || typeof options !== "object") {
