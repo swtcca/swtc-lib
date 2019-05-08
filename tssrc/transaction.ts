@@ -341,8 +341,11 @@ function Factory(Wallet = WalletFactory("jingtum")) {
         const MyContract = tum3.mc.contract(abi)
         remote.abi = abi
         const myContractInstance = MyContract.at(des) // initiate contract for an address
+        let result: any = false
+        if (remote.fun in myContractInstance) {
+          result = Function(`"use strict"; return myContractInstance.${func}`)() // call constant function
+        }
         // try {
-        const result = eval(`${myContractInstance}.${func}`) // call constant function
         // }catch (e){
         //     tx.tx_json.foo = new Error('invalid foo, not found this function.' + e);
         //     return tx;

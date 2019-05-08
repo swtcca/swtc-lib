@@ -20,7 +20,6 @@
     "arrow-parens": [true, "ban-single-arg-parens"],
     "curly": [true, "ignore-same-line"],
     "no-bitwise": false,
-    "no-eval": false,
     "object-literal-sort-keys": false,
     "quotemark": [true, "double", "avoid-escape", "jsx-double"],
     "semicolon": false,
