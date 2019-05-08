@@ -38,8 +38,12 @@ function getRelationType(type) {
  */
 class Remote extends EventEmitter {
   public type
-  protected _local_sign
-  protected _token
+  public abi?
+  public fun?
+  public readonly AbiCoder: any = null
+  public readonly Tum3: any = null
+  public readonly _token
+  public readonly _local_sign
   protected _issuer
   private _url
   private _server
@@ -47,10 +51,22 @@ class Remote extends EventEmitter {
   private _requests
   private _cache
   private _paths
+  private _solidity: boolean = false
   constructor(options) {
     super()
     const _opts = options || {}
     this._local_sign = true
+    if (_opts.solidity) {
+      this._solidity = true
+      try {
+        this.AbiCoder = require("tum3-eth-abi").AbiCoder
+        this.Tum3 = require("swtc-tum3")
+      } catch (error) {
+        throw Error(
+          "install tum3-eth-abi and swtc-tum3 to enable solidity support"
+        )
+      }
+    }
     if (typeof _opts.server !== "string") {
       this.type = new TypeError("server config not supplied")
       return this
@@ -99,7 +115,8 @@ class Remote extends EventEmitter {
       _local_sign: this._local_sign,
       _server: this._server,
       _token: this._token,
-      _issuer: this._issuer
+      _issuer: this._issuer,
+      _solidity: this._solidity
     }
   }
 
@@ -690,10 +707,10 @@ class Remote extends EventEmitter {
   }
 
   public initContract(options) {
-    return Transaction.initContract(options, this)
+    return Transaction.initContractTx(options, this)
   }
   public invokeContract(options) {
-    return Transaction.invokeContract(options, this)
+    return Transaction.invokeContractTx(options, this)
   }
   public AlethEvent = function(options) {
     const request = new Request(this, "aleth_eventlog", data => data)
@@ -923,12 +940,87 @@ class Remote extends EventEmitter {
       this._updateServerStatus(data.result)
     }
 
-    // return to callback
-    if (data.status === "success") {
-      const result = request.filter(data.result)
-      request && request.callback(null, result)
-    } else if (data.status === "error") {
-      request && request.callback(data.error_exception || data.error_message)
+    const self = this
+    if (this._solidity) {
+      // return to callback
+      if (data.status === "success") {
+        const result = request.filter(data.result)
+        if (
+          result.ContractState &&
+          result.tx_json.TransactionType === "AlethContract" &&
+          result.tx_json.Method === 1
+        ) {
+          // 调用合约时，如果是获取变量，则转换一下
+          const abi = new this.AbiCoder()
+          const types = utils.getTypes(self.abi, self.fun)
+          result.ContractState = abi.decodeParameters(
+            types,
+            result.ContractState
+          )
+          types.forEach((type, i) => {
+            if (type === "address") {
+              const adr = result.ContractState[i].slice(2)
+              const buf = new Buffer(20)
+              buf.write(adr, 0, "hex")
+              result.ContractState[i] = Wallet.KeyPair.__encode(buf)
+            }
+          })
+        }
+        if (result.AlethLog) {
+          const logValue = []
+          const item = { address: "", data: {} }
+          const logs = result.AlethLog
+          logs.forEach(log => {
+            const _log = JSON.parse(log.item)
+            const _adr = _log.address.slice(2)
+            const buf = new Buffer(20)
+            buf.write(_adr, 0, "hex")
+            item.address = Wallet.KeyPair.__encode(buf)
+
+            const abi = new this.AbiCoder()
+            self.abi
+              .filter(json => {
+                return json.type === "event"
+              })
+              .map(json => {
+                const types = json.inputs.map(input => {
+                  return input.type
+                })
+                const foo = json.name + "(" + types.join(",") + ")"
+                if (abi.encodeEventSignature(foo) === _log.topics[0]) {
+                  const data2 = abi.decodeLog(
+                    json.inputs,
+                    _log.data,
+                    _log.topics
+                  )
+                  json.inputs.forEach((input, i) => {
+                    if (input.type === "address") {
+                      const _adr2 = data2[i].slice(2)
+                      const buf2 = new Buffer(20)
+                      buf2.write(_adr2, 0, "hex")
+                      item.data[i] = Wallet.KeyPair.__encode(buf2)
+                    } else {
+                      item.data[i] = data2[i]
+                    }
+                  })
+                }
+              })
+
+            logValue.push(item)
+          })
+          result.AlethLog = logValue
+        }
+        request && request.callback(null, result)
+      } else if (data.status === "error") {
+        request && request.callback(data.error_message || data.error_exception)
+      }
+    } else {
+      if (data.status === "success") {
+        const result = request.filter(data.result)
+        request && request.callback(null, result)
+      } else if (data.status === "error") {
+        request && request.callback(data.error_message || data.error_exception)
+      }
     }
   }
 
