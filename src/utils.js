@@ -331,6 +331,7 @@ function txnType(tx, account) {
       case "SignSet":
       case "Operation":
       case "ConfigContract":
+      case "AlethContract":
         // TODO to sub-class tx type
         return tx.TransactionType.toLowerCase()
       default:
