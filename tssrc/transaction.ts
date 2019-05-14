@@ -308,6 +308,7 @@ function Factory(Wallet = WalletFactory("jingtum")) {
         const des = options.destination
         const func = options.func // 函数名及函数参数
         const abi = options.abi
+        const amount = options.amount
 
         if (!utils.isValidAddress(account)) {
           tx.tx_json.account = new Error("invalid address")
@@ -333,8 +334,25 @@ function Factory(Wallet = WalletFactory("jingtum")) {
           tx.tx_json.params = new Error("invalid abi: type error.")
           return tx
         }
+        if (amount && isNaN(amount)) {
+          tx.tx_json.amount = new Error(
+            "invalid amount: amount must be a number."
+          )
+          return tx
+        }
         // remote or tx ?
+        // issue potential when remote.fuc changed
         remote.fun = func.substring(0, func.indexOf("("))
+        if (amount) {
+          abi.forEach(a => {
+            if (a.name === remote.fun && !a.payable) {
+              tx.tx_json.amount = new Error(
+                "when payable is true, you can set the value of amount"
+              )
+              return tx
+            }
+          })
+        }
 
         const tum3 = new remote.Tum3()
         tum3.mc.defaultAccount = account
@@ -359,6 +377,7 @@ function Factory(Wallet = WalletFactory("jingtum")) {
         tx.tx_json.Account = account
         tx.tx_json.Method = 1
         tx.tx_json.Destination = des
+        tx.tx_json.Amount = options.amount ? options.amount : 0
         tx.tx_json.Args = []
         tx.tx_json.Args.push({
           Arg: {
