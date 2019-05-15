@@ -343,9 +343,10 @@ function Factory(Wallet = WalletFactory("jingtum")) {
         // remote or tx ?
         // issue potential when remote.fuc changed
         remote.fun = func.substring(0, func.indexOf("("))
+        const fun = remote.fun
         if (amount) {
           abi.forEach(a => {
-            if (a.name === remote.fun && !a.payable) {
+            if (a.name === fun && !a.payable) {
               tx.tx_json.amount = new Error(
                 "when payable is true, you can set the value of amount"
               )
@@ -360,13 +361,20 @@ function Factory(Wallet = WalletFactory("jingtum")) {
         remote.abi = abi
         const myContractInstance = MyContract.at(des) // initiate contract for an address
         let result: any = false
-        if (remote.fun in myContractInstance) {
-          result = Function(`"use strict"; return myContractInstance.${func}`)() // call constant function
+        if (fun in myContractInstance) {
+          result = new Function(
+            "contractInstance",
+            `"use strict"; return contractInstance.${func}`
+          )(myContractInstance) // call constant function
+        } else {
+          tx.tx_json.func = new Error(`function ${fun} no found in contract`)
+          return tx
         }
         // try {
-        // }catch (e){
-        //     tx.tx_json.foo = new Error('invalid foo, not found this function.' + e);
-        //     return tx;
+        //   result = eval("myContractInstance." + func) // call constant function
+        // } catch (e) {
+        //   tx.tx_json.func = e
+        //   return tx
         // }
 
         if (!result) {
