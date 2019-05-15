@@ -37,6 +37,11 @@ function getRelationType(type) {
  * @constructor
  */
 class Remote extends EventEmitter {
+  public static Wallet = Wallet
+  public static Account = Account
+  public static OrderBook = OrderBook
+  public static Transaction = Transaction
+  public static utils = utils
   public type
   public abi?
   public fun?
