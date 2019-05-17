@@ -123,7 +123,7 @@ function Factory(Wallet = WalletFactory()) {
    * @param amount
    * @returns {boolean}
    */
-  function isValidAmount(amount, token = "SWT") {
+  function isValidAmount(amount) {
     if (amount === null || typeof amount !== "object") {
       return false
     }
@@ -138,7 +138,7 @@ function Factory(Wallet = WalletFactory()) {
     if (!amount.currency || !isValidCurrency(amount.currency)) {
       return false
     }
-    let currency = getCurrency(token)
+    let currency = getCurrency()
     // native currency issuer is empty
     if (amount.currency === currency && amount.issuer !== "") {
       return false
@@ -155,7 +155,7 @@ function Factory(Wallet = WalletFactory()) {
    * @param amount
    * @returns {boolean}
    */
-  function isValidAmount0(amount, token = "SWT") {
+  function isValidAmount0(amount) {
     if (amount === null || typeof amount !== "object") {
       return false
     }
@@ -163,7 +163,7 @@ function Factory(Wallet = WalletFactory()) {
     if (!amount.currency || !isValidCurrency(amount.currency)) {
       return false
     }
-    let currency = getCurrency(token)
+    let currency = getCurrency()
     // native currency issuer is empty
     if (amount.currency === currency && amount.issuer !== "") {
       return false
@@ -181,10 +181,10 @@ function Factory(Wallet = WalletFactory()) {
    * @param amount
    * @returns {*}
    */
-  function parseAmount(amount, token = "SWT") {
+  function parseAmount(amount) {
     if (typeof amount === "string" && !Number.isNaN(Number(amount))) {
       var value = String(new Bignumber(amount).dividedBy(1000000.0))
-      let currency = getCurrency(token)
+      let currency = getCurrency()
       return { value: value, currency: currency, issuer: "" }
     } else if (typeof amount === "object" && isValidAmount(amount)) {
       return amount
@@ -299,12 +299,12 @@ function Factory(Wallet = WalletFactory()) {
    * @param tx
    * @returns {Array}
    */
-  function affectedBooks(tx, token = "SWT") {
+  function affectedBooks(tx) {
     var data = tx.meta
     if (typeof data !== "object") return []
     if (!Array.isArray(data.AffectedNodes)) return []
 
-    let currency = getCurrency(token)
+    let currency = getCurrency()
     var books = {}
     for (var i = 0; i < data.AffectedNodes.length; ++i) {
       var node = getTypeNode(data.AffectedNodes[i])
@@ -752,10 +752,10 @@ function Factory(Wallet = WalletFactory()) {
     return a
   }
 
-  var parseKey = function(key, token = "SWT") {
+  var parseKey = function(key) {
     var parts = key.split(":")
     if (parts.length !== 2) return null
-    var currency = getCurrency(token)
+    var currency = getCurrency()
 
     function parsePart(part) {
       if (part === currency) {
@@ -788,11 +788,11 @@ function Factory(Wallet = WalletFactory()) {
    * @param amount
    * @returns {Amount}
    */
-  function ToAmount(amount, token = "SWT") {
+  function ToAmount(amount) {
     if (amount.value && Number(amount.value) > 100000000000) {
       return new Error("invalid amount: amount's maximum value is 100000000000")
     }
-    const currency = getCurrency(token)
+    const currency = getCurrency()
     if (amount.currency === currency) {
       // return String(parseInt((new BigNumber(amount.value)).mul(1000000.0)))
       return String(
