@@ -21,7 +21,7 @@ describe("test remote", function() {
       let remote = new Remote({
         server: JT_NODE
       })
-      expect(remote._token).to.be.equal("swt")
+      expect(remote._token.toLowerCase()).to.be.equal("swt")
     })
 
     it("if the server is ws", function() {

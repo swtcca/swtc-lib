@@ -82,8 +82,11 @@ class Remote extends EventEmitter {
       ledger_index: 0
     }
     this._requests = {}
-    this._token = options.token || "swt"
-    this._issuer = options.issuer || "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or"
+    this._token = options.token || Wallet.token || "swt"
+    this._issuer =
+      options.issuer ||
+      Wallet.config.issuer ||
+      "jGa9J9TkqtBcUoHe2zqhVFFbgUVED6o9or"
     this._cache = LRU({
       max: 100,
       maxAge: 1000 * 60 * 5
