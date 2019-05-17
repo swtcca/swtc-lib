@@ -18,6 +18,7 @@ function Factory(Wallet = WalletFactory("jingtum")) {
    * @class
    */
   return class Transaction {
+    public static Wallet = Wallet
     public static set_clear_flags = {
       AccountSet: {
         asfRequireDest: 1,
@@ -176,8 +177,8 @@ function Factory(Wallet = WalletFactory("jingtum")) {
       if (offer_type === "Sell") tx.setFlags(offer_type)
       if (app) tx.tx_json.AppType = app
       tx.tx_json.Account = src
-      tx.tx_json.TakerPays = utils.ToAmount(taker_pays, remote._token || "swt")
-      tx.tx_json.TakerGets = utils.ToAmount(taker_gets, remote._token || "swt")
+      tx.tx_json.TakerPays = utils.ToAmount(taker_pays)
+      tx.tx_json.TakerGets = utils.ToAmount(taker_gets)
 
       if ("memo" in options && options.memo) {
         tx.addMemo(options.memo)
@@ -840,8 +841,8 @@ function Factory(Wallet = WalletFactory("jingtum")) {
     public _filter
     constructor(remote, filter = v => v) {
       this._remote = remote
-      this._token = remote._token || "swt"
-      this.tx_json = { Flags: 0, Fee: utils.getFee(this._token) }
+      this._token = remote._token || Wallet.token
+      this.tx_json = { Flags: 0, Fee: utils.getFee() }
       this._filter = filter
     }
 

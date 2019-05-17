@@ -12,12 +12,11 @@ describe("test Transaction", function() {
   describe("test constructor", function() {
     it("constructor: _token is swt", function() {
       let remote = new Remote({
-        server: JT_NODE,
-        local_sign: true
+        server: JT_NODE
       })
       remote._token = null
       let inst = new Transaction(remote)
-      expect(inst._token).to.equal("swt")
+      expect(inst._token.toLowerCase()).to.equal("swt")
       expect(inst._remote instanceof Remote).to.equal(true)
       expect(inst.tx_json).to.deep.equal({
         Flags: 0,

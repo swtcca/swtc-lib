@@ -37,7 +37,7 @@ describe("test transaction additions", function() {
       expect(tx._remote).to.be.an("object")
     })
     it("has _token", function() {
-      expect(tx._token).to.equal("swt")
+      expect(tx._token.toLowerCase()).to.equal("swt")
     })
     it("has tx_json.Fee", function() {
       expect(tx.tx_json.Fee).to.equal(utils.getFee(tx._token))
